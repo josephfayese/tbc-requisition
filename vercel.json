@@ -1,11 +1,7 @@
 {
   "crons": [
     {
-      "path": "/api/cron/payment-reminders",
-      "schedule": "0 9,15 * * *"
-    },
-    {
-      "path": "/api/cron/retirement-reminders",
+      "path": "/api/cron/daily-reminders",
       "schedule": "0 9 * * *"
     },
     {
