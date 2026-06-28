@@ -12,29 +12,33 @@ interface LineItem {
   description: string
   qty: string
   unitPrice: string
+  justification: string
+  file: File | null
 }
 
 export default function NewReqForm({ departments, defaultDept }: { departments: string[]; defaultDept: string }) {
   const [dept, setDept] = useState(defaultDept || departments[0] || '')
-  const [notes, setNotes] = useState('')
-  const [items, setItems] = useState<LineItem[]>([{ id: 1, description: '', qty: '1', unitPrice: '' }])
-  const [attachFile, setAttachFile] = useState<File | null>(null)
+  const [items, setItems] = useState<LineItem[]>([{ id: 1, description: '', qty: '1', unitPrice: '', justification: '', file: null }])
   const [isPending, startTransition] = useTransition()
   const { toast } = useToast()
   const router = useRouter()
   const nextId = useRef(2)
-  const fileRef = useRef<HTMLInputElement>(null)
+  const fileRefs = useRef<Record<number, HTMLInputElement | null>>({})
 
   function addItem() {
-    setItems((prev) => [...prev, { id: nextId.current++, description: '', qty: '1', unitPrice: '' }])
+    setItems((prev) => [...prev, { id: nextId.current++, description: '', qty: '1', unitPrice: '', justification: '', file: null }])
   }
 
   function removeItem(id: number) {
     setItems((prev) => prev.filter((i) => i.id !== id))
   }
 
-  function updateItem(id: number, field: keyof Omit<LineItem, 'id'>, value: string) {
+  function updateItem(id: number, field: keyof Omit<LineItem, 'id' | 'file'>, value: string) {
     setItems((prev) => prev.map((i) => i.id === id ? { ...i, [field]: value } : i))
+  }
+
+  function setItemFile(id: number, file: File | null) {
+    setItems((prev) => prev.map((i) => i.id === id ? { ...i, file } : i))
   }
 
   function itemTotal(item: LineItem) {
@@ -52,6 +56,7 @@ export default function NewReqForm({ departments, defaultDept }: { departments: 
       qty: parseInt(i.qty) || 1,
       unitPrice: parseFloat(i.unitPrice) || 0,
       amount: itemTotal(i),
+      justification: i.justification,
     }))
     if (parsed.some((i) => !i.description || i.amount <= 0)) {
       toast('All items need a description, quantity, and unit price', 'error')
@@ -59,22 +64,27 @@ export default function NewReqForm({ departments, defaultDept }: { departments: 
     }
 
     startTransition(async () => {
-      const result = await submitRequisition(dept, parsed, notes)
+      const result = await submitRequisition(dept, parsed)
       if (result.error) { toast(result.error, 'error'); return }
 
-      // Upload attachment if provided
-      if (attachFile && result.reqId) {
-        try {
-          const supabase = createClient()
-          const ext = attachFile.name.split('.').pop()
-          const path = `${result.reqId}/${Date.now()}.${ext}`
-          const { error: upErr } = await supabase.storage
-            .from('req-attachments')
-            .upload(path, attachFile)
-          if (!upErr) {
-            await saveAttachment(result.reqId, attachFile.name, path)
-          }
-        } catch { /* non-critical — requisition already saved */ }
+      // Upload per-item attachments (lineItemIds come back in order)
+      const lineItemIds = result.lineItemIds ?? []
+      const supabase = createClient()
+      for (let idx = 0; idx < items.length; idx++) {
+        const item = items[idx]
+        const lineItemId = lineItemIds[idx]
+        if (item.file && result.reqId && lineItemId) {
+          try {
+            const ext = item.file.name.split('.').pop()
+            const path = `${result.reqId}/${lineItemId}_${Date.now()}.${ext}`
+            const { error: upErr } = await supabase.storage
+              .from('req-attachments')
+              .upload(path, item.file)
+            if (!upErr) {
+              await saveAttachment(result.reqId, item.file.name, path, lineItemId)
+            }
+          } catch { /* non-critical */ }
+        }
       }
 
       toast(`${result.reqNumber} submitted successfully!`, 'success')
@@ -92,21 +102,6 @@ export default function NewReqForm({ departments, defaultDept }: { departments: 
         <select className="li-input" value={dept} onChange={(e) => setDept(e.target.value)} required>
           {departments.map((d) => <option key={d} value={d}>{d}</option>)}
         </select>
-      </div>
-
-      {/* Justification / Notes */}
-      <div className="card" style={{ padding: '20px 24px', marginBottom: 16 }}>
-        <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--ink-3)', marginBottom: 8 }}>
-          Justification / Notes <span style={{ fontSize: 11, fontWeight: 400, color: 'var(--ink-4)' }}>(optional)</span>
-        </label>
-        <textarea
-          className="li-input"
-          rows={3}
-          placeholder="Briefly explain the purpose of this requisition…"
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-          style={{ resize: 'vertical', minHeight: 72 }}
-        />
       </div>
 
       {/* Line items */}
@@ -129,48 +124,95 @@ export default function NewReqForm({ departments, defaultDept }: { departments: 
           </div>
 
           {items.map((item, idx) => (
-            <div key={item.id} className="li-grid li-grid-row">
-              <input
-                className="li-input"
-                placeholder={`Item ${idx + 1}`}
-                value={item.description}
-                onChange={(e) => updateItem(item.id, 'description', e.target.value)}
-                autoComplete="off"
-                required
-              />
-              <input
-                className="li-input"
-                type="number"
-                min="1"
-                step="1"
-                placeholder="1"
-                value={item.qty}
-                onChange={(e) => updateItem(item.id, 'qty', e.target.value)}
-                style={{ textAlign: 'center' }}
-                required
-              />
-              <input
-                className="li-input"
-                type="number"
-                min="0.01"
-                step="0.01"
-                placeholder="0.00"
-                value={item.unitPrice}
-                onChange={(e) => updateItem(item.id, 'unitPrice', e.target.value)}
-                style={{ textAlign: 'right' }}
-                required
-              />
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', fontSize: 13, fontWeight: 600, color: 'var(--ink)', fontVariantNumeric: 'tabular-nums', padding: '0 4px' }}>
-                {itemTotal(item) > 0 ? formatNaira(itemTotal(item)) : '—'}
+            <div key={item.id} style={{ borderBottom: '1px solid var(--line)', padding: '10px 0' }}>
+              {/* Main row */}
+              <div className="li-grid" style={{ alignItems: 'center' }}>
+                <input
+                  className="li-input"
+                  placeholder={`Item ${idx + 1}`}
+                  value={item.description}
+                  onChange={(e) => updateItem(item.id, 'description', e.target.value)}
+                  autoComplete="off"
+                  required
+                />
+                <input
+                  className="li-input"
+                  type="number"
+                  min="1"
+                  step="1"
+                  placeholder="1"
+                  value={item.qty}
+                  onChange={(e) => updateItem(item.id, 'qty', e.target.value)}
+                  style={{ textAlign: 'center' }}
+                  required
+                />
+                <input
+                  className="li-input"
+                  type="number"
+                  min="0.01"
+                  step="0.01"
+                  placeholder="0.00"
+                  value={item.unitPrice}
+                  onChange={(e) => updateItem(item.id, 'unitPrice', e.target.value)}
+                  style={{ textAlign: 'right' }}
+                  required
+                />
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', fontSize: 13, fontWeight: 600, color: 'var(--ink)', fontVariantNumeric: 'tabular-nums', padding: '0 4px' }}>
+                  {itemTotal(item) > 0 ? formatNaira(itemTotal(item)) : '—'}
+                </div>
+                <button
+                  type="button"
+                  className="x-btn"
+                  onClick={() => removeItem(item.id)}
+                  disabled={items.length === 1}
+                  style={{ opacity: items.length === 1 ? 0.3 : 1 }}
+                  aria-label="Remove item"
+                >✕</button>
               </div>
-              <button
-                type="button"
-                className="x-btn"
-                onClick={() => removeItem(item.id)}
-                disabled={items.length === 1}
-                style={{ opacity: items.length === 1 ? 0.3 : 1 }}
-                aria-label="Remove item"
-              >✕</button>
+
+              {/* Per-item justification + attachment */}
+              <div style={{ display: 'flex', gap: 8, marginTop: 8, flexWrap: 'wrap', alignItems: 'flex-start' }}>
+                <div style={{ flex: 1, minWidth: 200 }}>
+                  <input
+                    className="li-input"
+                    placeholder="Justification for this item (optional)"
+                    value={item.justification}
+                    onChange={(e) => updateItem(item.id, 'justification', e.target.value)}
+                    style={{ fontSize: 12 }}
+                  />
+                </div>
+                <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <button
+                    type="button"
+                    className="ghost-btn"
+                    style={{ fontSize: 11, padding: '6px 10px' }}
+                    onClick={() => fileRefs.current[item.id]?.click()}
+                  >
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+                    {item.file ? item.file.name.slice(0, 20) + (item.file.name.length > 20 ? '…' : '') : 'Attach'}
+                  </button>
+                  {item.file && (
+                    <button
+                      type="button"
+                      className="x-btn"
+                      style={{ width: 26, height: 26, fontSize: 10 }}
+                      onClick={() => {
+                        setItemFile(item.id, null)
+                        const ref = fileRefs.current[item.id]
+                        if (ref) ref.value = ''
+                      }}
+                      aria-label="Remove attachment"
+                    >✕</button>
+                  )}
+                  <input
+                    ref={(el) => { fileRefs.current[item.id] = el }}
+                    type="file"
+                    accept=".pdf,.jpg,.jpeg,.png,.webp"
+                    style={{ display: 'none' }}
+                    onChange={(e) => setItemFile(item.id, e.target.files?.[0] ?? null)}
+                  />
+                </div>
+              </div>
             </div>
           ))}
 
@@ -188,38 +230,6 @@ export default function NewReqForm({ departments, defaultDept }: { departments: 
         </div>
       </div>
 
-      {/* Attachment */}
-      <div className="card" style={{ padding: '16px 20px', marginBottom: 20 }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
-          <div>
-            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink-3)' }}>
-              Supporting Document <span style={{ fontSize: 11, fontWeight: 400, color: 'var(--ink-4)' }}>(optional · PDF, JPG, PNG · max 10MB)</span>
-            </div>
-            {attachFile && (
-              <div style={{ fontSize: 12, color: 'var(--brand)', marginTop: 4, fontWeight: 500 }}>
-                📎 {attachFile.name}
-              </div>
-            )}
-          </div>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <button type="button" className="ghost-btn" style={{ fontSize: 12 }} onClick={() => fileRef.current?.click()}>
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
-              {attachFile ? 'Change file' : 'Attach file'}
-            </button>
-            {attachFile && (
-              <button type="button" className="x-btn" onClick={() => { setAttachFile(null); if (fileRef.current) fileRef.current.value = '' }} aria-label="Remove attachment">✕</button>
-            )}
-          </div>
-        </div>
-        <input
-          ref={fileRef}
-          type="file"
-          accept=".pdf,.jpg,.jpeg,.png,.webp"
-          style={{ display: 'none' }}
-          onChange={(e) => setAttachFile(e.target.files?.[0] ?? null)}
-        />
-      </div>
-
       {/* Actions */}
       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12 }}>
         <button
@@ -227,11 +237,8 @@ export default function NewReqForm({ departments, defaultDept }: { departments: 
           className="ghost-btn"
           onClick={() => {
             nextId.current = 2
-            setItems([{ id: 1, description: '', qty: '1', unitPrice: '' }])
+            setItems([{ id: 1, description: '', qty: '1', unitPrice: '', justification: '', file: null }])
             setDept(defaultDept || departments[0] || '')
-            setNotes('')
-            setAttachFile(null)
-            if (fileRef.current) fileRef.current.value = ''
           }}
         >
           Reset

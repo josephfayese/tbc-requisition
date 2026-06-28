@@ -49,28 +49,30 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   if (!profile) redirect('/login')
 
-  // Counts for sidebar badges
-  const { count: pendingCount } = await supabase
-    .from('line_items')
-    .select('*', { count: 'exact', head: true })
-    .eq('status', 'pending')
+  // Counts for sidebar badges + module visibility setting — fetch in parallel
+  const [
+    { count: pendingCount },
+    { count: unreadNotifCount },
+    { count: payCount },
+    { count: reconCount },
+    { data: visSetting },
+  ] = await Promise.all([
+    supabase.from('line_items').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
+    supabase.from('notifications').select('*', { count: 'exact', head: true }).eq('user_id', user.id).eq('read', false),
+    supabase.from('line_items').select('*', { count: 'exact', head: true }).eq('status', 'approved'),
+    supabase.from('line_items').select('*', { count: 'exact', head: true }).eq('status', 'paid'),
+    supabase.from('settings').select('value').eq('key', 'module_visibility').single(),
+  ])
 
-  const { count: unreadNotifCount } = await supabase
-    .from('notifications')
-    .select('*', { count: 'exact', head: true })
-    .eq('user_id', user.id)
-    .eq('is_read', false)
-
-  const { count: payCount } = await supabase
-    .from('line_items')
-    .select('*', { count: 'exact', head: true })
-    .eq('status', 'approved')
-
-  // Paid items not yet retired — outstanding for reconciliation
-  const { count: reconCount } = await supabase
-    .from('line_items')
-    .select('*', { count: 'exact', head: true })
-    .eq('status', 'paid')
+  const defaultVisibility: Record<string, string[]> = {
+    retirement: ['hod', 'dg', 'backup', 'finance', 'pastor', 'chima', 'admin'],
+    reconciliation: ['finance', 'chima', 'admin'],
+    payments: ['chima', 'admin'],
+    approve: ['dg', 'finance', 'pastor', 'chima', 'admin'],
+  }
+  const moduleVisibility: Record<string, string[]> = visSetting?.value
+    ? (() => { try { return JSON.parse(visSetting.value) } catch { return defaultVisibility } })()
+    : defaultVisibility
 
   return (
     <DashboardShell
@@ -80,6 +82,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
       unreadNotifCount={unreadNotifCount ?? 0}
       payCount={payCount ?? 0}
       reconCount={reconCount ?? 0}
+      moduleVisibility={moduleVisibility}
     >
       {children}
     </DashboardShell>

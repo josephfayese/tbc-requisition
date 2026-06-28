@@ -9,17 +9,22 @@ interface Props {
   unreadNotifCount: number
   payCount: number
   reconCount: number
+  moduleVisibility: Record<string, string[]>
   isOpen?: boolean
   onClose?: () => void
 }
 
-export default function Sidebar({ userRole, pendingCount, unreadNotifCount, payCount, reconCount, isOpen, onClose }: Props) {
+export default function Sidebar({ userRole, pendingCount, unreadNotifCount, payCount, reconCount, moduleVisibility, isOpen, onClose }: Props) {
   const pathname = usePathname()
   const isActive = (href: string) => pathname === href
 
   function handleNavClick() {
     onClose?.()
   }
+
+  // Admin always sees everything; other roles check visibility settings
+  const can = (module: string) =>
+    userRole === 'admin' || (moduleVisibility[module]?.includes(userRole) ?? false)
 
   return (
     <nav className={`sidebar${isOpen ? ' open' : ''}`}>
@@ -40,10 +45,10 @@ export default function Sidebar({ userRole, pendingCount, unreadNotifCount, payC
       <div className="nav-group-label">Requester · HoD</div>
       <NavLink href="/dashboard/new-req" label="New requisition" active={isActive('/dashboard/new-req')} icon={PlusIcon} onClick={handleNavClick} />
       <NavLink href="/dashboard/my-req" label="My requisitions" active={isActive('/dashboard/my-req')} icon={DocIcon} onClick={handleNavClick} />
-      {(userRole === 'hod' || userRole === 'admin') && (
+      {can('retirement') && (
         <NavLink href="/dashboard/retirement" label="Fund retirement" active={isActive('/dashboard/retirement')} icon={RetireIcon} onClick={handleNavClick} />
       )}
-      {userRole === 'hod' && (
+      {(userRole === 'hod' || userRole === 'admin') && (
         <NavLink
           href="/dashboard/notifications"
           label="Notifications"
@@ -56,8 +61,8 @@ export default function Sidebar({ userRole, pendingCount, unreadNotifCount, payC
         />
       )}
 
-      {/* Deliberation queue — DG, Finance, Pastor, Chima, Admin */}
-      {(['dg', 'finance', 'pastor', 'chima', 'admin'].includes(userRole)) && (
+      {/* Deliberation queue */}
+      {can('approve') && (
         <>
           <div className="nav-group-label">Deliberation</div>
           <NavLink
@@ -73,14 +78,16 @@ export default function Sidebar({ userRole, pendingCount, unreadNotifCount, payC
         </>
       )}
 
-      {/* Payment queue — chima / admin */}
-      {(userRole === 'chima' || userRole === 'admin' || userRole === 'finance') && (
+      {/* Payment queue + reconciliation */}
+      {(can('payments') || can('reconciliation')) && (
         <>
           <div className="nav-group-label">Payments · Finance</div>
-          {(userRole === 'chima' || userRole === 'admin') && (
+          {can('payments') && (
             <NavLink href="/dashboard/payments" label="Payment queue" active={isActive('/dashboard/payments')} icon={WalletIcon} badge={payCount} badgeBg="var(--brand-soft)" badgeColor="var(--brand)" onClick={handleNavClick} />
           )}
-          <NavLink href="/dashboard/reconciliation" label="Reconciliation" active={isActive('/dashboard/reconciliation')} icon={ReconcileIcon} badge={reconCount} badgeBg="var(--warn-soft)" badgeColor="var(--warn)" onClick={handleNavClick} />
+          {can('reconciliation') && (
+            <NavLink href="/dashboard/reconciliation" label="Reconciliation" active={isActive('/dashboard/reconciliation')} icon={ReconcileIcon} badge={reconCount} badgeBg="var(--warn-soft)" badgeColor="var(--warn)" onClick={handleNavClick} />
+          )}
         </>
       )}
 
@@ -89,10 +96,11 @@ export default function Sidebar({ userRole, pendingCount, unreadNotifCount, payC
       <NavLink href="/dashboard/viewer" label="Group dashboard" active={isActive('/dashboard/viewer')} icon={EyeIcon} onClick={handleNavClick} />
 
       {/* Admin */}
-      {(userRole === 'admin') && (
+      {userRole === 'admin' && (
         <>
           <div className="nav-group-label">Admin · Audit</div>
           <NavLink href="/dashboard/admin" label="Users &amp; roles" active={isActive('/dashboard/admin')} icon={UsersIcon} onClick={handleNavClick} />
+          <NavLink href="/dashboard/settings" label="Settings" active={isActive('/dashboard/settings')} icon={SettingsIcon} onClick={handleNavClick} />
           <NavLink href="/dashboard/audit" label="Audit &amp; history" active={isActive('/dashboard/audit')} icon={ClockIcon} onClick={handleNavClick} />
         </>
       )}
@@ -156,3 +164,4 @@ const GridIcon = () => <svg width="15" height="15" viewBox="0 0 24 24" fill="non
 const RetireIcon = () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M9 14l2 2 4-4"/><path d="M5 7h14"/><path d="M5 12h14"/><path d="M5 17h14"/></svg>
 const BellIcon = () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
 const ReconcileIcon = () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22V12"/><path d="M5 12H2a10 10 0 0 0 20 0h-3"/><path d="M8 6l4-4 4 4"/><path d="M12 2v10"/></svg>
+const SettingsIcon = () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>

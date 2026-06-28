@@ -11,12 +11,14 @@ interface Props {
   unreadNotifCount: number
   payCount: number
   reconCount: number
+  moduleVisibility: Record<string, string[]>
   children: React.ReactNode
 }
 
 export default function DashboardShell({
   userName, userRole,
-  pendingCount, unreadNotifCount, payCount, reconCount, children,
+  pendingCount, unreadNotifCount, payCount, reconCount,
+  moduleVisibility, children,
 }: Props) {
   const [menuOpen, setMenuOpen] = useState(false)
 
@@ -36,6 +38,7 @@ export default function DashboardShell({
           unreadNotifCount={unreadNotifCount}
           payCount={payCount}
           reconCount={reconCount}
+          moduleVisibility={moduleVisibility}
           isOpen={menuOpen}
           onClose={() => setMenuOpen(false)}
         />

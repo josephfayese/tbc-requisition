@@ -38,7 +38,7 @@ async function getActorProfile() {
 
 export async function submitRequisition(
   dept: string,
-  items: { description: string; qty: number; unitPrice: number; amount: number }[],
+  items: { description: string; qty: number; unitPrice: number; amount: number; justification?: string }[],
   notes?: string
 ) {
   const { error, profile, supabase } = await getActorProfile()
@@ -69,10 +69,14 @@ export async function submitRequisition(
     qty: i.qty,
     unit_price: i.unitPrice,
     amount: i.amount,
+    justification: i.justification?.trim() || null,
     status: 'pending',
   }))
 
-  const { error: liErr } = await supabase.from('line_items').insert(lineItems)
+  const { data: insertedItems, error: liErr } = await supabase
+    .from('line_items')
+    .insert(lineItems)
+    .select('id')
   if (liErr) return { error: liErr.message }
 
   const total = items.reduce((s, i) => s + i.amount, 0)
@@ -88,7 +92,7 @@ export async function submitRequisition(
   revalidatePath('/dashboard/approve')
   revalidatePath('/dashboard/audit')
   revalidatePath('/dashboard/viewer')
-  return { error: null, reqNumber, reqId: req.id }
+  return { error: null, reqNumber, reqId: req.id, lineItemIds: insertedItems?.map((r) => r.id) ?? [] }
 }
 
 // ─── Approve item (pending → approved) ───────────────────────────────────────
@@ -289,9 +293,13 @@ export async function markPaid(lineItemId: number) {
   if (!item) return { error: 'Line item not found' }
   if (item.status !== 'approved') return { error: 'Only approved items can be marked as paid' }
 
+  const paidAt = new Date().toISOString()
+  // retirement_due_at = paid_at + 15 days
+  const retirementDueAt = new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString()
+
   const { error: upErr } = await supabase
     .from('line_items')
-    .update({ status: 'paid', paid_by: profile.id, paid_at: new Date().toISOString() })
+    .update({ status: 'paid', paid_by: profile.id, paid_at: paidAt, retirement_due_at: retirementDueAt })
     .eq('id', lineItemId)
 
   if (upErr) return { error: upErr.message }
@@ -302,7 +310,7 @@ export async function markPaid(lineItemId: number) {
     actor_id: profile.id,
     actor_name: profile.name,
     action: `Paid "${item.description}"`,
-    detail: `${formatNaira(item.amount)} · bank app (manual)`,
+    detail: `${formatNaira(item.amount)} · bank app (manual) · retirement due ${new Date(retirementDueAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}`,
   })
 
   revalidatePath('/dashboard/payments')
@@ -550,7 +558,7 @@ export async function reconcileRequisition(reqId: number, notes: string) {
 
 // ─── Save attachment record ───────────────────────────────────────────────────
 
-export async function saveAttachment(reqId: number, fileName: string, storagePath: string) {
+export async function saveAttachment(reqId: number, fileName: string, storagePath: string, lineItemId?: number) {
   const { error, profile, supabase } = await getActorProfile()
   if (error || !profile || !supabase) return { error: error ?? 'Auth error' }
 
@@ -559,10 +567,29 @@ export async function saveAttachment(reqId: number, fileName: string, storagePat
     uploaded_by: profile.id,
     file_name: fileName,
     storage_path: storagePath,
+    ...(lineItemId ? { line_item_id: lineItemId } : {}),
   })
 
   if (insErr) return { error: insErr.message }
   revalidatePath('/dashboard/my-req')
+  return { error: null }
+}
+
+// ─── Update module visibility (admin only) ────────────────────────────────────
+
+export async function updateModuleVisibility(visibility: Record<string, string[]>) {
+  const { error, profile, supabase } = await getActorProfile()
+  if (error || !profile || !supabase) return { error: error ?? 'Auth error' }
+  if (profile.role !== 'admin') return { error: 'Only Admin can update module visibility' }
+
+  const { error: upErr } = await supabase
+    .from('settings')
+    .update({ value: JSON.stringify(visibility) })
+    .eq('key', 'module_visibility')
+
+  if (upErr) return { error: upErr.message }
+
+  revalidatePath('/dashboard', 'layout')
   return { error: null }
 }
 
