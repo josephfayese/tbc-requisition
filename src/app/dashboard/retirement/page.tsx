@@ -11,8 +11,7 @@ export default async function RetirementPage() {
   const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
   if (!profile) redirect('/login')
 
-  // Only HoD and admin can submit retirement
-  if (!['hod', 'admin'].includes(profile.role)) redirect('/dashboard')
+  // Retirement is open to all authenticated users (visibility controlled via settings)
 
   // Fetch paid items belonging to this user's requisitions
   const { data: items } = await supabase

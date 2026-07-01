@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { formatNaira, fmtDate } from '@/lib/utils'
 import StatusPill from '@/components/StatusPill'
 import MyReqActions from './MyReqActions'
+import CsvExport from './CsvExport'
 
 export default async function MyReqPage() {
   const supabase = await createClient()
@@ -26,6 +27,20 @@ export default async function MyReqPage() {
           <h1>Your <em>Submissions</em></h1>
           <p className="masthead-sub">{all.length} requisition{all.length !== 1 ? 's' : ''} submitted. Rejected items can be edited and resubmitted.</p>
         </div>
+        {all.length > 0 && (
+          <div className="masthead-actions">
+            <CsvExport rows={all.flatMap((req) =>
+              (req.line_items ?? []).map((item: { description: string; amount: number; status: string }) => ({
+                req_number: req.req_number,
+                dept: req.dept,
+                req_date: fmtDate(req.created_at),
+                description: item.description,
+                amount: Number(item.amount),
+                status: item.status,
+              }))
+            )} />
+          </div>
+        )}
       </div>
 
       {all.length === 0 && (
