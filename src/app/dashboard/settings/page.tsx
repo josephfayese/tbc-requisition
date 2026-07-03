@@ -10,11 +10,15 @@ export default async function SettingsPage() {
   const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
   if (profile?.role !== 'admin') redirect('/dashboard')
 
-  const { data: visSetting } = await supabase
-    .from('settings')
-    .select('value')
-    .eq('key', 'module_visibility')
-    .single()
+  const [
+    { data: visSetting },
+    { data: passcodeSetting },
+    { data: openSetting },
+  ] = await Promise.all([
+    supabase.from('settings').select('value').eq('key', 'module_visibility').single(),
+    supabase.from('settings').select('value').eq('key', 'viewer_passcode').single(),
+    supabase.from('settings').select('value').eq('key', 'viewer_open').single(),
+  ])
 
   const defaultVisibility: Record<string, string[]> = {
     retirement: ['hod', 'dg', 'backup', 'finance', 'pastor', 'chima', 'admin'],
@@ -33,11 +37,15 @@ export default async function SettingsPage() {
       <div className="masthead" style={{ marginBottom: 28 }}>
         <div>
           <div className="masthead-eyebrow"><span className="bar" />Settings</div>
-          <h1>Module Visibility</h1>
-          <p className="masthead-sub">Control which roles can see each module in the sidebar.</p>
+          <h1>App <em>Settings</em></h1>
+          <p className="masthead-sub">Control module access and group dashboard visibility.</p>
         </div>
       </div>
-      <SettingsClient moduleVisibility={moduleVisibility} />
+      <SettingsClient
+        moduleVisibility={moduleVisibility}
+        viewerPasscode={passcodeSetting?.value ?? 'ZION26'}
+        viewerOpen={openSetting?.value === 'true'}
+      />
     </div>
   )
 }

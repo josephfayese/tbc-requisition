@@ -606,8 +606,34 @@ export async function markNotificationsRead() {
 // ─── Verify viewer passcode ───────────────────────────────────────────────────
 
 export async function verifyViewerPasscode(input: string): Promise<{ ok: boolean }> {
-  const correct = process.env.VIEWER_PASSCODE ?? 'ZION26'
+  const supabase = await createClient()
+
+  const [{ data: openSetting }, { data: passcodeSetting }] = await Promise.all([
+    supabase.from('settings').select('value').eq('key', 'viewer_open').single(),
+    supabase.from('settings').select('value').eq('key', 'viewer_passcode').single(),
+  ])
+
+  // If viewer is open to everyone, skip passcode check
+  if (openSetting?.value === 'true') return { ok: true }
+
+  const correct = passcodeSetting?.value ?? process.env.VIEWER_PASSCODE ?? 'ZION26'
   return { ok: input.trim().toUpperCase() === correct.toUpperCase() }
+}
+
+// ─── Update viewer (group dashboard) settings ─────────────────────────────────
+
+export async function updateViewerSettings(passcode: string, open: boolean) {
+  const { error, profile, supabase } = await getActorProfile()
+  if (error || !profile || !supabase) return { error: error ?? 'Auth error' }
+  if (profile.role !== 'admin') return { error: 'Only Admin can update viewer settings' }
+  if (!open && passcode.trim().length < 4) return { error: 'Passcode must be at least 4 characters' }
+
+  const { error: e1 } = await supabase.from('settings').upsert({ key: 'viewer_passcode', value: passcode.trim().toUpperCase() })
+  const { error: e2 } = await supabase.from('settings').upsert({ key: 'viewer_open', value: String(open) })
+  if (e1 || e2) return { error: e1?.message ?? e2?.message ?? 'Failed to save' }
+
+  revalidatePath('/dashboard/settings')
+  return { error: null }
 }
 
 // ─── Sign up ──────────────────────────────────────────────────────────────────
