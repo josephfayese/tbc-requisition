@@ -55,6 +55,9 @@ export async function submitRequisition(
   if (items.some((i) => !i.description.trim() || i.amount <= 0)) {
     return { error: 'All items must have a description and a positive amount' }
   }
+  if (items.some((i) => !i.justification?.trim())) {
+    return { error: 'A justification is required for every line item' }
+  }
 
   // Generate req number atomically via DB sequence (race-free)
   const { data: reqNumber, error: seqErr } = await supabase.rpc('next_req_number')

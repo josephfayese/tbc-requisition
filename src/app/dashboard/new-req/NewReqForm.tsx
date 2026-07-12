@@ -62,6 +62,10 @@ export default function NewReqForm({ departments, defaultDept }: { departments: 
       toast('All items need a description, quantity, and unit price', 'error')
       return
     }
+    if (parsed.some((i) => !i.justification.trim())) {
+      toast('A justification is required for every line item', 'error')
+      return
+    }
 
     startTransition(async () => {
       const result = await submitRequisition(dept, parsed)
@@ -175,10 +179,11 @@ export default function NewReqForm({ departments, defaultDept }: { departments: 
                 <div style={{ flex: 1, minWidth: 200 }}>
                   <input
                     className="li-input"
-                    placeholder="Justification for this item (optional)"
+                    placeholder="Justification for this item (required)"
                     value={item.justification}
                     onChange={(e) => updateItem(item.id, 'justification', e.target.value)}
                     style={{ fontSize: 12 }}
+                    required
                   />
                 </div>
                 <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
