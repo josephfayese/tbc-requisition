@@ -3,7 +3,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { formatNaira } from '@/lib/utils'
 import { Resend } from 'resend'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
+const getResend = () => new Resend(process.env.RESEND_API_KEY)
 const FROM = 'TBC Finance <noreply@tbcooz-finance.com>'
 
 // Vercel invokes this with Authorization: Bearer <CRON_SECRET>
@@ -64,7 +64,7 @@ export async function GET(req: NextRequest) {
     // Email reminder
     if (chima.email) {
       try {
-        await resend.emails.send({
+        await getResend().emails.send({
           from: FROM,
           to: chima.email,
           subject: `⚠ Action Required: ${approvedItems.length} Payment${approvedItems.length !== 1 ? 's' : ''} Pending — ${formatNaira(total)}`,

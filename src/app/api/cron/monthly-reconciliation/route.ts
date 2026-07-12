@@ -3,7 +3,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { formatNaira } from '@/lib/utils'
 import { Resend } from 'resend'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
+const getResend = () => new Resend(process.env.RESEND_API_KEY)
 const FROM = 'TBC Finance <noreply@tbcooz-finance.com>'
 
 function isAuthorized(req: NextRequest) {
@@ -139,7 +139,7 @@ export async function GET(req: NextRequest) {
       })
       if (fa.email) {
         try {
-          await resend.emails.send({
+          await getResend().emails.send({
             from: FROM,
             to: fa.email,
             subject: `Monthly Reconciliation Report — ${monthLabel}`,

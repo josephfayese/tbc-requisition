@@ -6,11 +6,12 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { formatNaira } from '@/lib/utils'
 import { Resend } from 'resend'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
 const FROM = 'TBC Finance <noreply@tbcooz-finance.com>'
 
 async function sendEmail(to: string, subject: string, html: string) {
   try {
+    if (!process.env.RESEND_API_KEY) return
+    const resend = new Resend(process.env.RESEND_API_KEY)
     await resend.emails.send({ from: FROM, to, subject, html })
   } catch {
     // Non-critical — log but don't block the action
