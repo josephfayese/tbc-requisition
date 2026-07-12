@@ -1,0 +1,23 @@
+# Triggers the payment-reminder endpoint 3x daily (Vercel Hobby crons are
+# limited to once per day, so extra runs are driven from GitHub Actions).
+# Requires two repository secrets:
+#   APP_URL     — e.g. https://tbcooz-finance.com
+#   CRON_SECRET — same value as the CRON_SECRET env var on Vercel
+name: Payment reminders (3x daily)
+
+on:
+  schedule:
+    - cron: '0 8 * * *'   # 09:00 WAT
+    - cron: '0 12 * * *'  # 13:00 WAT
+    - cron: '0 16 * * *'  # 17:00 WAT
+  workflow_dispatch:
+
+jobs:
+  remind:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call payment-reminders endpoint
+        run: |
+          curl --fail-with-body -sS \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            "${{ secrets.APP_URL }}/api/cron/payment-reminders"

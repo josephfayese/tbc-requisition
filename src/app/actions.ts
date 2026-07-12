@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { formatNaira } from '@/lib/utils'
+import { formatNaira, isSubmissionWindowOpen, submissionWindowMessage } from '@/lib/utils'
 import { Resend } from 'resend'
 
 const FROM = 'TBC Finance <noreply@tbcooz-finance.com>'
@@ -45,16 +45,20 @@ export async function submitRequisition(
   const { error, profile, supabase } = await getActorProfile()
   if (error || !profile || !supabase) return { error: error ?? 'Auth error' }
 
+  // Submissions allowed Monday–Wednesday only (WAT). Admin is exempt.
+  if (profile.role !== 'admin' && !isSubmissionWindowOpen()) {
+    return { error: submissionWindowMessage() }
+  }
+
   if (!dept) return { error: 'Department is required' }
   if (!items.length) return { error: 'At least one line item is required' }
   if (items.some((i) => !i.description.trim() || i.amount <= 0)) {
     return { error: 'All items must have a description and a positive amount' }
   }
 
-  // Generate req number
-  const { count } = await supabase.from('requisitions').select('*', { count: 'exact', head: true })
-  const nextId = (count ?? 0) + 2001
-  const reqNumber = `REQ-${String(nextId).padStart(4, '0')}`
+  // Generate req number atomically via DB sequence (race-free)
+  const { data: reqNumber, error: seqErr } = await supabase.rpc('next_req_number')
+  if (seqErr || !reqNumber) return { error: seqErr?.message ?? 'Could not generate requisition number' }
 
   const { data: req, error: reqErr } = await supabase
     .from('requisitions')

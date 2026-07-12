@@ -33,11 +33,8 @@ export default function LoginPage() {
       <div style={{ width: '100%', maxWidth: 380 }}>
         {/* Brand */}
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <div style={{ width: 52, height: 52, borderRadius: 14, background: 'var(--brand-deep)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-              <path d="M12 3 L12 21 M3 12 L21 12" stroke="white" strokeWidth="2.5" strokeLinecap="round" />
-            </svg>
-          </div>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo-wordmark.jpg" alt="Out of Zion — The Baptizing Church" style={{ width: 220, maxWidth: '80%', margin: '0 auto 16px', display: 'block' }} />
           <div style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.12em', color: 'var(--ink-4)', marginBottom: 6 }}>
             TBC OutOfZion
           </div>

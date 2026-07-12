@@ -38,12 +38,8 @@ export default function ChangePasswordPage() {
       <div style={{ width: '100%', maxWidth: 380 }}>
         {/* Brand */}
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <div style={{ width: 52, height: 52, borderRadius: 14, background: 'var(--brand-deep)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="3" y="11" width="18" height="11" rx="2" />
-              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-            </svg>
-          </div>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo-wordmark.jpg" alt="Out of Zion — The Baptizing Church" style={{ width: 220, maxWidth: '80%', margin: '0 auto 16px', display: 'block' }} />
           <div style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.12em', color: 'var(--ink-4)', marginBottom: 6 }}>
             TBC OutOfZion
           </div>

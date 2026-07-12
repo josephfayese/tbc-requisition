@@ -29,12 +29,8 @@ export default function Sidebar({ userRole, pendingCount, unreadNotifCount, payC
   return (
     <nav className={`sidebar${isOpen ? ' open' : ''}`}>
       <div className="sidebar-header">
-        <div className="sidebar-mark" style={{ background: 'var(--brand-deep)' }}>
-          <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-            <rect x="2" y="2" width="14" height="14" rx="3" fill="white" opacity="0.25" />
-            <path d="M9 4 L9 14 M4 9 L14 9" stroke="white" strokeWidth="2" strokeLinecap="round" />
-          </svg>
-        </div>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/logo-mark.jpg" alt="Out of Zion" width={32} height={32} style={{ borderRadius: '50%', objectFit: 'cover' }} />
         <div>
           <div className="sidebar-name">TBC Finance</div>
           <div style={{ fontSize: 11, color: 'var(--ink-4)', marginTop: 1 }}>{roleLabel(userRole)}</div>

@@ -23,11 +23,8 @@ export default async function DashboardLayout({ children }: { children: React.Re
       <div style={{ minHeight: '100vh', background: 'var(--bg)' }}>
         <div className="topbar">
           <div className="brand-mark">
-            <div style={{ width: 28, height: 28, borderRadius: 7, background: 'var(--brand-deep)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
-                <path d="M7.5 2 L7.5 13 M2 7.5 L13 7.5" stroke="white" strokeWidth="2" strokeLinecap="round" />
-              </svg>
-            </div>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo-mark.jpg" alt="Out of Zion" width={30} height={30} style={{ borderRadius: '50%', objectFit: 'cover' }} />
             <div>
               <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--ink)', lineHeight: 1.1 }}>TBC OutOfZion</div>
               <div style={{ fontSize: 10, color: 'var(--ink-4)', letterSpacing: '0.05em' }}>Finance Requisitions</div>

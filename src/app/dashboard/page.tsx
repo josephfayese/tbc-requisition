@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
-import { formatNaira, fmtDate } from '@/lib/utils'
+import { formatNaira, fmtDate, formatHours } from '@/lib/utils'
 
 // Roles that get a full home page vs. a direct redirect
 const REDIRECT_ROLES: Record<string, string> = {
@@ -102,6 +102,21 @@ export default async function DashboardPage() {
       )
     : null
 
+  // Payment SLA: time from approval (decided_at) to payment initiation (paid_at).
+  // Benchmark: 2 hours.
+  const SLA_HOURS = 2
+  const slaItems = items.filter(
+    (i) => ['paid', 'retired'].includes(i.status) && i.decided_at && i.paid_at
+  )
+  const slaDurations = slaItems.map(
+    (i) => (new Date(i.paid_at!).getTime() - new Date(i.decided_at!).getTime()) / 3600000
+  )
+  const avgSlaHours = slaDurations.length > 0
+    ? slaDurations.reduce((s, h) => s + h, 0) / slaDurations.length
+    : null
+  const withinSla = slaDurations.filter((h) => h <= SLA_HOURS).length
+  const slaPct = slaDurations.length > 0 ? Math.round((withinSla / slaDurations.length) * 100) : null
+
   // Spend by department (paid + retired only)
   const deptMap: Record<string, { paid: number; retired: number; pending: number; approved: number }> = {}
   for (const item of items) {
@@ -183,6 +198,32 @@ export default async function DashboardPage() {
         <StatCard label="Pipeline Value" value={formatNaira(pipelineTotal)} sub="pending + approved items" color="var(--purple)" href="/dashboard/approve" />
         <StatCard label="Rejection Rate" value={`${rejectionRate}%`} sub={`${rejectedItems.length} of ${decidedItems.length} decided`} color={rejectionRate > 20 ? 'var(--neg)' : 'var(--ink-4)'} href="/dashboard/approve" />
         <StatCard label="Avg Days to Pay" value={avgDaysToPay !== null ? `${avgDaysToPay}d` : '—'} sub="submission → bank payment" color="var(--ink-3)" href="/dashboard/payments" />
+      </div>
+
+      {/* ── Payment SLA ── */}
+      <div className="section-title" style={{ marginBottom: 12 }}><span className="bar" />Payment SLA — Approval to Payment (Benchmark: 2 hours)</div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 32 }}>
+        <StatCard
+          label="Avg Approval → Payment"
+          value={avgSlaHours !== null ? formatHours(avgSlaHours) : '—'}
+          sub={`across ${slaItems.length} payment${slaItems.length !== 1 ? 's' : ''}`}
+          color={avgSlaHours !== null && avgSlaHours > SLA_HOURS ? 'var(--neg)' : 'var(--pos)'}
+          href="/dashboard/payments"
+        />
+        <StatCard
+          label="Within 2h SLA"
+          value={slaPct !== null ? `${slaPct}%` : '—'}
+          sub={`${withinSla} of ${slaDurations.length} paid within benchmark`}
+          color={slaPct !== null && slaPct < 80 ? 'var(--warn)' : 'var(--pos)'}
+          href="/dashboard/payments"
+        />
+        <StatCard
+          label="SLA Breaches"
+          value={String(slaDurations.length - withinSla)}
+          sub="payments initiated after 2 hours"
+          color={slaDurations.length - withinSla > 0 ? 'var(--neg)' : 'var(--ink-4)'}
+          href="/dashboard/payments"
+        />
       </div>
 
       {/* ── Spend by Department ── */}
