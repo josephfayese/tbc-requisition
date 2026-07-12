@@ -103,7 +103,7 @@ export default function NewReqForm({ departments, defaultDept }: { departments: 
         <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--ink-3)', marginBottom: 8 }}>
           Department
         </label>
-        <select className="li-input" value={dept} onChange={(e) => setDept(e.target.value)} required>
+        <select className="li-input" value={dept} onChange={(e) => setDept(e.target.value)} required style={{ maxWidth: 280 }}>
           {departments.map((d) => <option key={d} value={d}>{d}</option>)}
         </select>
       </div>
