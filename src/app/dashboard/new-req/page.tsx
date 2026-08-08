@@ -11,7 +11,7 @@ export default async function NewReqPage() {
   const { data: { user } } = await supabase.auth.getUser()
   const { data: profile } = await supabase.from('profiles').select('dept, role').eq('id', user!.id).single()
 
-  const windowOpen = ['admin', 'trainer'].includes(profile?.role ?? '') || isSubmissionWindowOpen()
+  const windowOpen = profile?.role === 'admin' || isSubmissionWindowOpen()
 
   return (
     <div className="page" style={{ maxWidth: 720 }}>

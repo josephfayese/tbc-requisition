@@ -9,7 +9,6 @@ const REDIRECT_ROLES: Record<string, string> = {
   hod:    '/dashboard/new-req',
   backup: '/dashboard/approve',
   pastor: '/dashboard/approve',
-  trainer: '/dashboard/approve',
 }
 
 export default async function DashboardPage() {
