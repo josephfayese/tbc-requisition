@@ -12,6 +12,7 @@ const ROLES = [
   { value: 'pastor', label: 'Senior Pastor' },
   { value: 'chima', label: 'Payment Executor' },
   { value: 'admin', label: 'Administrator' },
+  { value: 'trainer', label: 'Trainer (Demo — initiate + approve)' },
 ]
 
 export default function InviteUserForm({ departments }: { departments: string[] }) {

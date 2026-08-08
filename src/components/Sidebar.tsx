@@ -143,6 +143,7 @@ function roleLabel(role: string): string {
     pastor: 'Senior Pastor',
     chima: 'Payment Executor',
     admin: 'Administrator',
+    trainer: 'Trainer (Demo)',
   }
   return map[role] ?? role
 }

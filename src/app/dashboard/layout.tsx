@@ -62,10 +62,10 @@ export default async function DashboardLayout({ children }: { children: React.Re
   ])
 
   const defaultVisibility: Record<string, string[]> = {
-    retirement: ['hod', 'dg', 'backup', 'finance', 'pastor', 'chima', 'admin'],
+    retirement: ['hod', 'dg', 'backup', 'finance', 'pastor', 'chima', 'admin', 'trainer'],
     reconciliation: ['finance', 'chima', 'admin'],
     payments: ['chima', 'admin'],
-    approve: ['dg', 'finance', 'pastor', 'chima', 'admin'],
+    approve: ['dg', 'finance', 'pastor', 'chima', 'admin', 'trainer'],
   }
   const moduleVisibility: Record<string, string[]> = visSetting?.value
     ? (() => { try { return JSON.parse(visSetting.value) } catch { return defaultVisibility } })()

@@ -11,10 +11,10 @@ export default async function ApprovePage() {
   const { data: profile } = await supabase.from('profiles').select('role, name').eq('id', user.id).single()
   if (!profile) redirect('/login')
 
-  const canSee = ['dg', 'finance', 'pastor', 'chima', 'admin'].includes(profile.role)
+  const canSee = ['dg', 'finance', 'pastor', 'chima', 'admin', 'trainer'].includes(profile.role)
   if (!canSee) redirect('/dashboard')
 
-  const canApprove = ['finance', 'pastor', 'admin'].includes(profile.role)
+  const canApprove = ['finance', 'pastor', 'admin', 'trainer'].includes(profile.role)
 
   const { data: rawItems } = await supabase
     .from('line_items')

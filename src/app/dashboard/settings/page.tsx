@@ -21,10 +21,10 @@ export default async function SettingsPage() {
   ])
 
   const defaultVisibility: Record<string, string[]> = {
-    retirement: ['hod', 'dg', 'backup', 'finance', 'pastor', 'chima', 'admin'],
+    retirement: ['hod', 'dg', 'backup', 'finance', 'pastor', 'chima', 'admin', 'trainer'],
     reconciliation: ['finance', 'chima', 'admin'],
     payments: ['chima', 'admin'],
-    approve: ['dg', 'finance', 'pastor', 'chima', 'admin'],
+    approve: ['dg', 'finance', 'pastor', 'chima', 'admin', 'trainer'],
   }
 
   let moduleVisibility = defaultVisibility

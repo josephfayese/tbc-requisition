@@ -45,8 +45,8 @@ export async function submitRequisition(
   const { error, profile, supabase } = await getActorProfile()
   if (error || !profile || !supabase) return { error: error ?? 'Auth error' }
 
-  // Submissions allowed Monday–Wednesday only (WAT). Admin is exempt.
-  if (profile.role !== 'admin' && !isSubmissionWindowOpen()) {
+  // Submissions allowed Monday–Wednesday only (WAT). Admin and trainer (demo) are exempt.
+  if (!['admin', 'trainer'].includes(profile.role) && !isSubmissionWindowOpen()) {
     return { error: submissionWindowMessage() }
   }
 
@@ -110,7 +110,7 @@ export async function approveItem(lineItemId: number) {
   const { error, profile, supabase } = await getActorProfile()
   if (error || !profile || !supabase) return { error: error ?? 'Auth error' }
 
-  if (!['finance', 'pastor', 'admin'].includes(profile.role)) {
+  if (!['finance', 'pastor', 'admin', 'trainer'].includes(profile.role)) {
     return { error: 'Only Head of Finance, Senior Pastor, or Admin can approve items' }
   }
 
@@ -197,7 +197,7 @@ export async function rejectItem(lineItemId: number, reason: string) {
   const { error, profile, supabase } = await getActorProfile()
   if (error || !profile || !supabase) return { error: error ?? 'Auth error' }
 
-  if (!['finance', 'pastor', 'admin'].includes(profile.role)) {
+  if (!['finance', 'pastor', 'admin', 'trainer'].includes(profile.role)) {
     return { error: 'Only Head of Finance, Senior Pastor, or Admin can reject items' }
   }
   if (!reason.trim()) return { error: 'A rejection reason is required' }
@@ -426,7 +426,7 @@ export async function inviteUser(name: string, email: string, role: string, dept
   if (profile.role !== 'admin') return { error: 'Only Admin can create users' }
   if (!name.trim() || !email.trim() || !role) return { error: 'Name, email, and role are required' }
 
-  const validRoles = ['hod', 'dg', 'finance', 'pastor', 'chima', 'admin']
+  const validRoles = ['hod', 'dg', 'finance', 'pastor', 'chima', 'admin', 'trainer']
   if (!validRoles.includes(role)) return { error: 'Invalid role' }
   if (role === 'hod' && !dept?.trim()) return { error: 'Department is required for HoD role' }
 

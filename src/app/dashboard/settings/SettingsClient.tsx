@@ -12,6 +12,7 @@ const ALL_ROLES = [
   { value: 'finance', label: 'Head of Finance' },
   { value: 'pastor', label: 'Senior Pastor' },
   { value: 'chima', label: 'Payment Executor' },
+  { value: 'trainer', label: 'Trainer (Demo)' },
 ]
 
 const MODULES = [
