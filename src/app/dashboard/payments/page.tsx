@@ -16,7 +16,7 @@ export default async function PaymentsPage() {
     .select(`
       id, description, amount, status, decided_at,
       req_id,
-      requisitions (req_number, dept, profiles (name)),
+      requisitions (req_number, dept, bank_name, account_number, account_name, profiles (name)),
       profiles!line_items_decided_by_fkey (name)
     `)
     .eq('status', 'approved')
@@ -75,6 +75,7 @@ export default async function PaymentsPage() {
                 <th>Description</th>
                 <th>Dept</th>
                 <th>Requester</th>
+                <th>Pay to</th>
                 <th>Approved by</th>
                 <th style={{ textAlign: 'right' }}>Amount</th>
                 {canPay && <th style={{ width: 120 }}>Action</th>}
@@ -82,7 +83,7 @@ export default async function PaymentsPage() {
             </thead>
             <tbody>
               {approved.map((item) => {
-                const req = (item.requisitions as unknown) as { req_number: string; dept: string; profiles: { name: string } } | null
+                const req = (item.requisitions as unknown) as { req_number: string; dept: string; bank_name: string | null; account_number: string | null; account_name: string | null; profiles: { name: string } } | null
                 const approver = ((item as unknown) as { profiles?: { name: string } | null }).profiles
                 return (
                   <tr key={item.id}>
@@ -90,6 +91,15 @@ export default async function PaymentsPage() {
                     <td className="strong">{item.description}</td>
                     <td>{req?.dept}</td>
                     <td>{req?.profiles?.name}</td>
+                    <td>
+                      {req?.account_number ? (
+                        <div style={{ fontSize: 12, lineHeight: 1.4 }}>
+                          <div style={{ fontWeight: 600 }}>{req.account_name}</div>
+                          <div style={{ fontFamily: 'var(--mono)', color: 'var(--ink-3)' }}>{req.account_number}</div>
+                          <div style={{ color: 'var(--ink-4)' }}>{req.bank_name}</div>
+                        </div>
+                      ) : '—'}
+                    </td>
                     <td>{approver?.name ?? '—'}</td>
                     <td className="num strong">{formatNaira(item.amount)}</td>
                     {canPay && (

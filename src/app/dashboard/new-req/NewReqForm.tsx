@@ -18,6 +18,9 @@ interface LineItem {
 
 export default function NewReqForm({ departments, defaultDept }: { departments: string[]; defaultDept: string }) {
   const [dept, setDept] = useState(defaultDept || departments[0] || '')
+  const [bankName, setBankName] = useState('')
+  const [accountNumber, setAccountNumber] = useState('')
+  const [accountName, setAccountName] = useState('')
   const [items, setItems] = useState<LineItem[]>([{ id: 1, description: '', qty: '1', unitPrice: '', justification: '', file: null }])
   const [isPending, startTransition] = useTransition()
   const { toast } = useToast()
@@ -66,9 +69,13 @@ export default function NewReqForm({ departments, defaultDept }: { departments: 
       toast('A justification is required for every line item', 'error')
       return
     }
+    if (!bankName.trim() || !accountNumber.trim() || !accountName.trim()) {
+      toast('Bank account details are required', 'error')
+      return
+    }
 
     startTransition(async () => {
-      const result = await submitRequisition(dept, parsed)
+      const result = await submitRequisition(dept, parsed, { bankName, accountNumber, accountName })
       if (result.error) { toast(result.error, 'error'); return }
 
       // Upload per-item attachments (lineItemIds come back in order)
@@ -106,6 +113,43 @@ export default function NewReqForm({ departments, defaultDept }: { departments: 
         <select className="li-input" value={dept} onChange={(e) => setDept(e.target.value)} required style={{ maxWidth: 280 }}>
           {departments.map((d) => <option key={d} value={d}>{d}</option>)}
         </select>
+      </div>
+
+      {/* Bank account details */}
+      <div className="card" style={{ padding: '20px 24px', marginBottom: 16 }}>
+        <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--ink-3)', marginBottom: 4 }}>
+          Bank Account Details
+        </label>
+        <p style={{ fontSize: 12, color: 'var(--ink-4)', margin: '0 0 12px' }}>
+          Account the payment should be made into. Required.
+        </p>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 10 }}>
+          <input
+            className="li-input"
+            placeholder="Bank name"
+            value={bankName}
+            onChange={(e) => setBankName(e.target.value)}
+            autoComplete="off"
+            required
+          />
+          <input
+            className="li-input"
+            placeholder="Account number"
+            value={accountNumber}
+            onChange={(e) => setAccountNumber(e.target.value.replace(/[^\d]/g, ''))}
+            inputMode="numeric"
+            autoComplete="off"
+            required
+          />
+          <input
+            className="li-input"
+            placeholder="Account name"
+            value={accountName}
+            onChange={(e) => setAccountName(e.target.value)}
+            autoComplete="off"
+            required
+          />
+        </div>
       </div>
 
       {/* Line items */}
@@ -244,6 +288,9 @@ export default function NewReqForm({ departments, defaultDept }: { departments: 
             nextId.current = 2
             setItems([{ id: 1, description: '', qty: '1', unitPrice: '', justification: '', file: null }])
             setDept(defaultDept || departments[0] || '')
+            setBankName('')
+            setAccountNumber('')
+            setAccountName('')
           }}
         >
           Reset

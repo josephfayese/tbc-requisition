@@ -3,12 +3,13 @@ import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import { formatNaira, fmtDate, formatHours } from '@/lib/utils'
 
-// Roles that get a full home page vs. a direct redirect
+// Roles that get a full home page vs. a direct redirect.
+// Dashboard is reserved for the finance team, DG, and Admin.
 const REDIRECT_ROLES: Record<string, string> = {
   hod:    '/dashboard/new-req',
-  dg:     '/dashboard/approve',
   backup: '/dashboard/approve',
   pastor: '/dashboard/approve',
+  trainer: '/dashboard/approve',
 }
 
 export default async function DashboardPage() {

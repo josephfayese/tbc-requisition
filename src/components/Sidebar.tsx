@@ -37,6 +37,14 @@ export default function Sidebar({ userRole, pendingCount, unreadNotifCount, payC
         </div>
       </div>
 
+      {/* Dashboard — finance team, DG, and Admin only */}
+      {['finance', 'chima', 'dg', 'admin'].includes(userRole) && (
+        <>
+          <div className="nav-group-label">Overview</div>
+          <NavLink href="/dashboard" label="Dashboard" active={isActive('/dashboard')} icon={HomeIcon} onClick={handleNavClick} />
+        </>
+      )}
+
       {/* Requester — all roles can submit */}
       <div className="nav-group-label">Requester · HoD</div>
       <NavLink href="/dashboard/new-req" label="New requisition" active={isActive('/dashboard/new-req')} icon={PlusIcon} onClick={handleNavClick} />
@@ -149,6 +157,7 @@ function roleLabel(role: string): string {
 }
 
 // Icons
+const HomeIcon = () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9.5 12 3l9 6.5V21a1 1 0 0 1-1 1h-5v-7h-6v7H4a1 1 0 0 1-1-1z"/></svg>
 const PlusIcon = () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M5 12h14M12 5v14"/></svg>
 const DocIcon = () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg>
 const InboxIcon = () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>

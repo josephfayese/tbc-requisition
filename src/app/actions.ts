@@ -40,6 +40,7 @@ async function getActorProfile() {
 export async function submitRequisition(
   dept: string,
   items: { description: string; qty: number; unitPrice: number; amount: number; justification?: string }[],
+  bank: { bankName: string; accountNumber: string; accountName: string },
   notes?: string
 ) {
   const { error, profile, supabase } = await getActorProfile()
@@ -58,6 +59,9 @@ export async function submitRequisition(
   if (items.some((i) => !i.justification?.trim())) {
     return { error: 'A justification is required for every line item' }
   }
+  if (!bank?.bankName?.trim() || !bank?.accountNumber?.trim() || !bank?.accountName?.trim()) {
+    return { error: 'Bank name, account number, and account name are required' }
+  }
 
   // Generate req number atomically via DB sequence (race-free)
   const { data: reqNumber, error: seqErr } = await supabase.rpc('next_req_number')
@@ -65,7 +69,15 @@ export async function submitRequisition(
 
   const { data: req, error: reqErr } = await supabase
     .from('requisitions')
-    .insert({ req_number: reqNumber, user_id: profile.id, dept, notes: notes?.trim() || null })
+    .insert({
+      req_number: reqNumber,
+      user_id: profile.id,
+      dept,
+      notes: notes?.trim() || null,
+      bank_name: bank.bankName.trim(),
+      account_number: bank.accountNumber.trim(),
+      account_name: bank.accountName.trim(),
+    })
     .select()
     .single()
 
