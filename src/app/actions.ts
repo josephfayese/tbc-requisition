@@ -736,8 +736,14 @@ export async function changePassword(newPassword: string) {
   const { error: pwErr } = await supabase.auth.updateUser({ password: newPassword })
   if (pwErr) return { error: pwErr.message }
 
-  // Clear the must_change_password flag
-  await supabase.from('profiles').update({ must_change_password: false }).eq('id', user.id)
+  // Clear the must_change_password flag. Must use the admin client: profiles has
+  // no RLS update policy, so a user-scoped update silently affects 0 rows and the
+  // middleware keeps redirecting back to /change-password.
+  const { error: flagErr } = await createAdminClient()
+    .from('profiles')
+    .update({ must_change_password: false })
+    .eq('id', user.id)
+  if (flagErr) return { error: flagErr.message }
 
   revalidatePath('/', 'layout')
   return { error: null }
