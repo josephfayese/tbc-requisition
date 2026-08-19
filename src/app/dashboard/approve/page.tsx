@@ -19,7 +19,7 @@ export default async function ApprovePage() {
   const { data: rawItems } = await supabase
     .from('line_items')
     .select(`
-      id, description, amount, qty, unit_price, created_at, req_id,
+      id, description, amount, qty, unit_price, created_at, req_id, resubmission_note,
       requisitions!inner(id, req_number, dept, created_at, notes,
         profiles!requisitions_user_id_fkey(name)
       )
@@ -42,6 +42,7 @@ export default async function ApprovePage() {
       notes: req?.notes ?? '',
       req_created_at: req?.created_at ?? '',
       requester: req?.profiles?.name ?? 'Unknown',
+      resubmission_note: item.resubmission_note ?? '',
     }
   })
 

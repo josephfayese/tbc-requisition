@@ -8,7 +8,6 @@ import { formatNaira, fmtDate, formatHours } from '@/lib/utils'
 const REDIRECT_ROLES: Record<string, string> = {
   hod:    '/dashboard/new-req',
   backup: '/dashboard/approve',
-  pastor: '/dashboard/approve',
 }
 
 export default async function DashboardPage() {

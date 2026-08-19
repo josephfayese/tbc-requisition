@@ -19,6 +19,7 @@ interface Item {
   notes: string
   req_created_at: string
   requester: string
+  resubmission_note: string
 }
 
 export default function ApproveClient({ items, canApprove }: { items: Item[]; canApprove: boolean }) {
@@ -119,7 +120,15 @@ export default function ApproveClient({ items, canApprove }: { items: Item[]; ca
                   <tbody>
                     {group.items.map((item) => (
                       <tr key={item.id}>
-                        <td className="strong">{item.description}</td>
+                        <td className="strong">
+                          {item.description}
+                          {item.resubmission_note && (
+                            <div style={{ marginTop: 4, fontSize: 11, color: 'var(--brand)', background: 'var(--brand-soft)', border: '1px solid var(--brand-line)', borderRadius: 4, padding: '4px 8px' }}>
+                              <span style={{ fontWeight: 700, textTransform: 'uppercase', fontSize: 10, letterSpacing: '0.06em' }}>Resubmission note: </span>
+                              {item.resubmission_note}
+                            </div>
+                          )}
+                        </td>
                         <td style={{ textAlign: 'center', color: 'var(--ink-3)' }}>{item.qty}</td>
                         <td className="num" style={{ color: 'var(--ink-3)' }}>{item.unit_price ? formatNaira(item.unit_price) : '—'}</td>
                         <td className="num strong">{formatNaira(item.amount)}</td>
@@ -159,7 +168,15 @@ export default function ApproveClient({ items, canApprove }: { items: Item[]; ca
               {items.map((item) => (
                 <tr key={item.id}>
                   <td style={{ fontFamily: 'var(--mono)', fontSize: 12 }}>{item.req_number}</td>
-                  <td className="strong">{item.description}</td>
+                  <td className="strong">
+                    {item.description}
+                    {item.resubmission_note && (
+                      <div style={{ marginTop: 4, fontSize: 11, color: 'var(--brand)', background: 'var(--brand-soft)', border: '1px solid var(--brand-line)', borderRadius: 4, padding: '4px 8px' }}>
+                        <span style={{ fontWeight: 700, textTransform: 'uppercase', fontSize: 10, letterSpacing: '0.06em' }}>Resubmission note: </span>
+                        {item.resubmission_note}
+                      </div>
+                    )}
+                  </td>
                   <td>{item.dept}</td>
                   <td style={{ fontSize: 12, color: 'var(--ink-3)' }}>{item.requester}</td>
                   <td className="num">{formatNaira(item.amount)}</td>

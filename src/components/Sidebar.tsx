@@ -38,7 +38,7 @@ export default function Sidebar({ userRole, pendingCount, unreadNotifCount, payC
       </div>
 
       {/* Dashboard — finance team, DG, and Admin only */}
-      {['finance', 'chima', 'dg', 'admin'].includes(userRole) && (
+      {['finance', 'chima', 'dg', 'pastor', 'admin'].includes(userRole) && (
         <>
           <div className="nav-group-label">Overview</div>
           <NavLink href="/dashboard" label="Dashboard" active={isActive('/dashboard')} icon={HomeIcon} onClick={handleNavClick} />

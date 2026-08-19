@@ -12,6 +12,7 @@ export default function MyReqActions({ item }: Props) {
   const [editing, setEditing] = useState(false)
   const [desc, setDesc] = useState(item.description)
   const [amount, setAmount] = useState(String(item.amount))
+  const [note, setNote] = useState('')
   const [isPending, startTransition] = useTransition()
   const { toast } = useToast()
 
@@ -22,12 +23,13 @@ export default function MyReqActions({ item }: Props) {
       return
     }
     startTransition(async () => {
-      const result = await resubmitItem(item.id, desc.trim(), amt)
+      const result = await resubmitItem(item.id, desc.trim(), amt, note.trim() || undefined)
       if (result.error) {
         toast(result.error, 'error')
       } else {
         toast('Item resubmitted for review', 'success')
         setEditing(false)
+        setNote('')
       }
     })
   }
@@ -63,6 +65,14 @@ export default function MyReqActions({ item }: Props) {
         step="0.01"
         style={{ fontSize: 12, padding: '6px 8px', textAlign: 'right' }}
       />
+      <textarea
+        className="li-input"
+        value={note}
+        onChange={(e) => setNote(e.target.value)}
+        placeholder="Explain what changed (optional but recommended)…"
+        rows={2}
+        style={{ fontSize: 12, padding: '6px 8px', resize: 'vertical', minHeight: 48 }}
+      />
       <div style={{ display: 'flex', gap: 6 }}>
         <button
           className="act-btn act-approve"
@@ -75,7 +85,7 @@ export default function MyReqActions({ item }: Props) {
         <button
           className="act-btn"
           style={{ background: 'var(--bg-sunken)', color: 'var(--ink-3)', fontSize: 11 }}
-          onClick={() => { setEditing(false); setDesc(item.description); setAmount(String(item.amount)) }}
+          onClick={() => { setEditing(false); setDesc(item.description); setAmount(String(item.amount)); setNote('') }}
         >
           Cancel
         </button>

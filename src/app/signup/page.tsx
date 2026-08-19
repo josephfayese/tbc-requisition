@@ -1,6 +1,8 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import SignupForm from './SignupForm'
 
+export const dynamic = 'force-dynamic'
+
 export default async function SignupPage() {
   const admin = createAdminClient()
 

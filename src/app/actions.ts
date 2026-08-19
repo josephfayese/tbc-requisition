@@ -112,6 +112,66 @@ export async function submitRequisition(
   revalidatePath('/dashboard/approve')
   revalidatePath('/dashboard/audit')
   revalidatePath('/dashboard/viewer')
+
+  // Notify all approvers (finance, pastor, admin) about the new requisition
+  const admin = createAdminClient()
+  const { data: approvers } = await admin
+    .from('profiles')
+    .select('id, name, email')
+    .in('role', ['finance', 'pastor', 'admin'])
+
+  if (approvers && approvers.length > 0) {
+    const itemList = items
+      .map((i) => `<tr>
+        <td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;font-size:13px">${i.description}</td>
+        <td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;font-size:13px;text-align:right;font-weight:600">${formatNaira(i.amount)}</td>
+      </tr>`)
+      .join('')
+
+    for (const approver of approvers) {
+      await admin.from('notifications').insert({
+        user_id: approver.id,
+        req_id: req.id,
+        message: `New requisition ${reqNumber} submitted by ${profile.name} (${dept}) — ${items.length} item${items.length !== 1 ? 's' : ''} · ${formatNaira(total)}`,
+        type: 'approved',
+      })
+
+      if (approver.email) {
+        await sendEmail(
+          approver.email,
+          `New Requisition Submitted — ${reqNumber}`,
+          `<div style="font-family:sans-serif;max-width:560px;margin:0 auto;padding:24px">
+            <div style="background:#064E2F;color:#fff;border-radius:8px 8px 0 0;padding:20px 24px">
+              <div style="font-size:13px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;opacity:0.85;margin-bottom:4px">TBC OutOfZion Finance</div>
+              <div style="font-size:20px;font-weight:800">New Requisition Submitted</div>
+            </div>
+            <div style="background:#f9fafb;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 8px 8px;padding:24px">
+              <p style="margin:0 0 16px;color:#374151">Hi ${approver.name},</p>
+              <p style="margin:0 0 16px;color:#374151">A new requisition has been submitted and requires your review.</p>
+              <div style="background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:16px;margin-bottom:16px">
+                <div style="font-size:12px;color:#6b7280;margin-bottom:4px">Requisition</div>
+                <div style="font-size:14px;font-weight:700;color:#111827;font-family:monospace">${reqNumber}</div>
+                <div style="margin-top:12px;font-size:12px;color:#6b7280;margin-bottom:4px">Submitted by</div>
+                <div style="font-size:14px;font-weight:600;color:#111827">${profile.name} · ${dept}</div>
+                <div style="margin-top:12px;font-size:12px;color:#6b7280;margin-bottom:4px">Total</div>
+                <div style="font-size:18px;font-weight:800;color:#111827">${formatNaira(total)}</div>
+              </div>
+              <table style="width:100%;border-collapse:collapse;border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;margin-bottom:20px">
+                <thead><tr style="background:#f3f4f6">
+                  <th style="padding:8px 12px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;color:#6b7280">Item</th>
+                  <th style="padding:8px 12px;text-align:right;font-size:11px;font-weight:700;text-transform:uppercase;color:#6b7280">Amount</th>
+                </tr></thead>
+                <tbody>${itemList}</tbody>
+              </table>
+              <a href="https://tbcooz-finance.com/dashboard/approve" style="display:inline-block;background:#064E2F;color:#fff;text-decoration:none;padding:10px 20px;border-radius:7px;font-size:13px;font-weight:600">Review Requisition →</a>
+            </div>
+            <p style="margin:16px 0 0;font-size:11px;color:#9ca3af;text-align:center">TBC OutOfZion · Internal Finance System</p>
+          </div>`
+        )
+      }
+    }
+  }
+
   return { error: null, reqNumber, reqId: req.id, lineItemIds: insertedItems?.map((r) => r.id) ?? [] }
 }
 
@@ -306,7 +366,7 @@ export async function markPaid(lineItemId: number) {
 
   const { data: item } = await supabase
     .from('line_items')
-    .select('*')
+    .select('*, requisitions!inner(req_number, user_id)')
     .eq('id', lineItemId)
     .single()
 
@@ -324,14 +384,61 @@ export async function markPaid(lineItemId: number) {
 
   if (upErr) return { error: upErr.message }
 
+  const req = item.requisitions as { req_number: string; user_id: string }
+  const retirementDateStr = new Date(retirementDueAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+
   await supabase.from('audit_log').insert({
     req_id: item.req_id,
     line_item_id: lineItemId,
     actor_id: profile.id,
     actor_name: profile.name,
     action: `Paid "${item.description}"`,
-    detail: `${formatNaira(item.amount)} · bank app (manual) · retirement due ${new Date(retirementDueAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}`,
+    detail: `${formatNaira(item.amount)} · bank app (manual) · retirement due ${retirementDateStr}`,
   })
+
+  // Notify the requester about payment
+  const admin = createAdminClient()
+  const message = `"${item.description}" in ${req.req_number} has been paid (${formatNaira(item.amount)}). Fund retirement due by ${retirementDateStr}.`
+  await admin.from('notifications').insert({
+    user_id: req.user_id,
+    line_item_id: lineItemId,
+    req_id: item.req_id,
+    message,
+    type: 'approved',
+  })
+
+  const { data: requesterAuth } = await admin.auth.admin.getUserById(req.user_id)
+  const { data: requesterProfile } = await admin.from('profiles').select('name').eq('id', req.user_id).single()
+  if (requesterAuth?.user?.email) {
+    await sendEmail(
+      requesterAuth.user.email,
+      `Payment Made — ${req.req_number}`,
+      `<div style="font-family:sans-serif;max-width:560px;margin:0 auto;padding:24px">
+        <div style="background:#064E2F;color:#fff;border-radius:8px 8px 0 0;padding:20px 24px">
+          <div style="font-size:13px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;opacity:0.85;margin-bottom:4px">TBC OutOfZion Finance</div>
+          <div style="font-size:20px;font-weight:800">Payment Completed</div>
+        </div>
+        <div style="background:#f9fafb;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 8px 8px;padding:24px">
+          <p style="margin:0 0 16px;color:#374151">Hi ${requesterProfile?.name ?? 'there'},</p>
+          <p style="margin:0 0 16px;color:#374151">Your requisition item has been <strong style="color:#064E2F">paid</strong>. Please submit your fund retirement within 15 days.</p>
+          <div style="background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:16px;margin-bottom:16px">
+            <div style="font-size:12px;color:#6b7280;margin-bottom:4px">Requisition</div>
+            <div style="font-size:14px;font-weight:700;color:#111827;font-family:monospace">${req.req_number}</div>
+            <div style="margin-top:12px;font-size:12px;color:#6b7280;margin-bottom:4px">Item</div>
+            <div style="font-size:14px;font-weight:600;color:#111827">${item.description}</div>
+            <div style="margin-top:12px;font-size:12px;color:#6b7280;margin-bottom:4px">Amount Paid</div>
+            <div style="font-size:18px;font-weight:800;color:#111827">${formatNaira(item.amount)}</div>
+          </div>
+          <div style="background:#fefce8;border:1px solid #fde68a;border-radius:8px;padding:14px;margin-bottom:20px">
+            <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#b45309;margin-bottom:6px">Fund Retirement Due</div>
+            <div style="font-size:14px;color:#374151">Please submit your retirement notes by <strong>${retirementDateStr}</strong>.</div>
+          </div>
+          <a href="https://tbcooz-finance.com/dashboard/retirement" style="display:inline-block;background:#064E2F;color:#fff;text-decoration:none;padding:10px 20px;border-radius:7px;font-size:13px;font-weight:600">Submit Retirement Notes →</a>
+        </div>
+        <p style="margin:16px 0 0;font-size:11px;color:#9ca3af;text-align:center">TBC OutOfZion · Internal Finance System</p>
+      </div>`
+    )
+  }
 
   revalidatePath('/dashboard/payments')
   revalidatePath('/dashboard/my-req')
@@ -342,7 +449,7 @@ export async function markPaid(lineItemId: number) {
 
 // ─── Resubmit item ────────────────────────────────────────────────────────────
 
-export async function resubmitItem(lineItemId: number, newDesc: string, newAmount: number) {
+export async function resubmitItem(lineItemId: number, newDesc: string, newAmount: number, resubmissionNote?: string) {
   const { error, profile, supabase } = await getActorProfile()
   if (error || !profile || !supabase) return { error: error ?? 'Auth error' }
 
@@ -372,6 +479,7 @@ export async function resubmitItem(lineItemId: number, newDesc: string, newAmoun
       reason: null,
       decided_by: null,
       decided_at: null,
+      resubmission_note: resubmissionNote?.trim() || null,
     })
     .eq('id', lineItemId)
 
@@ -383,7 +491,7 @@ export async function resubmitItem(lineItemId: number, newDesc: string, newAmoun
     actor_id: profile.id,
     actor_name: profile.name,
     action: `Resubmitted "${newDesc.trim()}"`,
-    detail: `Updated from "${item.description}" · ${formatNaira(newAmount)}`,
+    detail: `Updated from "${item.description}" · ${formatNaira(newAmount)}${resubmissionNote?.trim() ? ` · Note: ${resubmissionNote.trim()}` : ''}`,
   })
 
   revalidatePath('/dashboard/my-req')
