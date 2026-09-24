@@ -341,6 +341,10 @@ body { background: var(--bg); color: var(--ink); font-family: Arial, Helvetica, 
   .masthead { gap: 12px; }
 }
 
+  /* Date filter bar stacks on mobile */
+  .seg { flex-wrap: wrap; }
+  .seg button { font-size: 11px; padding: 5px 9px; }
+
 /* Small mobile (≤ 480px) */
 @media (max-width: 480px) {
   .content { padding: 12px 10px; }
