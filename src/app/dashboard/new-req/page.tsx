@@ -7,11 +7,15 @@ export default async function NewReqPage() {
   const supabase = await createClient()
   const admin = createAdminClient()
 
-  const { data: depts } = await admin.from('departments').select('name').order('name')
-  const { data: { user } } = await supabase.auth.getUser()
+  const [{ data: depts }, { data: { user } }, { data: windowSetting }] = await Promise.all([
+    admin.from('departments').select('name').order('name'),
+    supabase.auth.getUser(),
+    supabase.from('settings').select('value').eq('key', 'submission_window_enabled').single(),
+  ])
   const { data: profile } = await supabase.from('profiles').select('dept, role').eq('id', user!.id).single()
 
-  const windowOpen = profile?.role === 'admin' || isSubmissionWindowOpen()
+  const windowEnabled = windowSetting?.value !== 'false' // defaults to enabled
+  const windowOpen = profile?.role === 'admin' || !windowEnabled || isSubmissionWindowOpen()
 
   return (
     <div className="page" style={{ maxWidth: 720 }}>

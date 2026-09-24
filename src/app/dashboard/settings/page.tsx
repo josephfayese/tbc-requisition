@@ -14,10 +14,12 @@ export default async function SettingsPage() {
     { data: visSetting },
     { data: passcodeSetting },
     { data: openSetting },
+    { data: windowSetting },
   ] = await Promise.all([
     supabase.from('settings').select('value').eq('key', 'module_visibility').single(),
     supabase.from('settings').select('value').eq('key', 'viewer_passcode').single(),
     supabase.from('settings').select('value').eq('key', 'viewer_open').single(),
+    supabase.from('settings').select('value').eq('key', 'submission_window_enabled').single(),
   ])
 
   const defaultVisibility: Record<string, string[]> = {
@@ -45,6 +47,7 @@ export default async function SettingsPage() {
         moduleVisibility={moduleVisibility}
         viewerPasscode={passcodeSetting?.value ?? 'ZION26'}
         viewerOpen={openSetting?.value === 'true'}
+        submissionWindowEnabled={windowSetting?.value !== 'false'}
       />
     </div>
   )

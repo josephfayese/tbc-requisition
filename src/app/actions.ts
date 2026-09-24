@@ -47,7 +47,14 @@ export async function submitRequisition(
   if (error || !profile || !supabase) return { error: error ?? 'Auth error' }
 
   // Submissions allowed Monday–Wednesday only (WAT). Admin is exempt.
-  if (profile.role !== 'admin' && !isSubmissionWindowOpen()) {
+  // The cutoff can be disabled entirely by an admin via settings.
+  const { data: windowSetting } = await supabase
+    .from('settings')
+    .select('value')
+    .eq('key', 'submission_window_enabled')
+    .single()
+  const windowEnabled = windowSetting?.value !== 'false' // defaults to enabled
+  if (windowEnabled && profile.role !== 'admin' && !isSubmissionWindowOpen()) {
     return { error: submissionWindowMessage() }
   }
 
@@ -746,6 +753,34 @@ export async function verifyViewerPasscode(input: string): Promise<{ ok: boolean
 
   const correct = passcodeSetting?.value ?? process.env.VIEWER_PASSCODE ?? 'ZION26'
   return { ok: input.trim().toUpperCase() === correct.toUpperCase() }
+}
+
+// ─── Update submission window toggle ─────────────────────────────────────────
+
+export async function updateSubmissionWindow(enabled: boolean) {
+  const { error, profile, supabase } = await getActorProfile()
+  if (error || !profile || !supabase) return { error: error ?? 'Auth error' }
+  if (profile.role !== 'admin') return { error: 'Only Admin can update the submission window' }
+
+  const { error: upErr } = await supabase
+    .from('settings')
+    .upsert({ key: 'submission_window_enabled', value: String(enabled) })
+
+  if (upErr) return { error: upErr.message }
+
+  await supabase.from('audit_log').insert({
+    actor_id: profile.id,
+    actor_name: profile.name,
+    action: enabled ? 'Submission window enabled' : 'Submission window disabled',
+    detail: enabled
+      ? 'Mon–Wed cutoff is now enforced — requisitions can only be submitted Monday to Wednesday'
+      : 'Mon–Wed cutoff is now disabled — requisitions can be submitted any day',
+  })
+
+  revalidatePath('/dashboard', 'layout')
+  revalidatePath('/dashboard/new-req')
+  revalidatePath('/dashboard/settings')
+  return { error: null }
 }
 
 // ─── Update viewer (group dashboard) settings ─────────────────────────────────

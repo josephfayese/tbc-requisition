@@ -52,7 +52,7 @@ export default function Sidebar({ userRole, pendingCount, unreadNotifCount, payC
       {can('retirement') && (
         <NavLink href="/dashboard/retirement" label="Fund retirement" active={isActive('/dashboard/retirement')} icon={RetireIcon} onClick={handleNavClick} />
       )}
-      {(userRole === 'hod' || userRole === 'admin') && (
+      {(['hod', 'finance', 'admin'].includes(userRole)) && (
         <NavLink
           href="/dashboard/notifications"
           label="Notifications"

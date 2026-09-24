@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { updateModuleVisibility, updateViewerSettings } from '@/app/actions'
+import { updateModuleVisibility, updateViewerSettings, updateSubmissionWindow } from '@/app/actions'
 import { useToast } from '@/components/Toast'
 
 const ALL_ROLES = [
@@ -25,14 +25,17 @@ interface Props {
   moduleVisibility: Record<string, string[]>
   viewerPasscode: string
   viewerOpen: boolean
+  submissionWindowEnabled: boolean
 }
 
-export default function SettingsClient({ moduleVisibility: initial, viewerPasscode: initPasscode, viewerOpen: initOpen }: Props) {
+export default function SettingsClient({ moduleVisibility: initial, viewerPasscode: initPasscode, viewerOpen: initOpen, submissionWindowEnabled: initWindow }: Props) {
   const [visibility, setVisibility] = useState<Record<string, string[]>>(initial)
   const [viewerOpen, setViewerOpen] = useState(initOpen)
   const [passcode, setPasscode] = useState(initPasscode)
+  const [windowEnabled, setWindowEnabled] = useState(initWindow)
   const [isPendingVis, startVis] = useTransition()
   const [isPendingViewer, startViewer] = useTransition()
+  const [isPendingWindow, startWindow] = useTransition()
   const { toast } = useToast()
   const router = useRouter()
 
@@ -120,6 +123,49 @@ export default function SettingsClient({ moduleVisibility: initial, viewerPassco
           <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
             <button className="pri-btn" onClick={handleSaveViewer} disabled={isPendingViewer} style={{ fontSize: 13 }}>
               {isPendingViewer ? 'Saving…' : 'Save Viewer Settings'}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Submission Window ── */}
+      <div>
+        <div className="section-title" style={{ marginBottom: 12 }}><span className="bar" />Submission Window</div>
+        <div className="card" style={{ padding: '20px 24px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', background: 'var(--bg-tint)', borderRadius: 10, border: '1px solid var(--line)', marginBottom: 16 }}>
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink)' }}>Enforce Mon–Wed cutoff</div>
+              <div style={{ fontSize: 11, color: 'var(--ink-4)', marginTop: 2 }}>
+                {windowEnabled
+                  ? 'Requisitions can only be submitted Monday to Wednesday (WAT). Admin is always exempt.'
+                  : 'Cutoff is disabled — requisitions can be submitted any day of the week.'}
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setWindowEnabled((v) => !v)}
+              className="toggle-track"
+              style={{ background: windowEnabled ? 'var(--brand)' : 'var(--line-2)', flexShrink: 0 }}
+              aria-label="Toggle submission window"
+            >
+              <div className="toggle-knob" style={{ transform: windowEnabled ? 'translateX(16px)' : 'translateX(0)' }} />
+            </button>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+            <button
+              className="pri-btn"
+              onClick={() => {
+                startWindow(async () => {
+                  const result = await updateSubmissionWindow(windowEnabled)
+                  if (result.error) { toast(result.error, 'error'); return }
+                  toast(windowEnabled ? 'Submission window cutoff enabled' : 'Submission window cutoff disabled', 'success')
+                  router.refresh()
+                })
+              }}
+              disabled={isPendingWindow}
+              style={{ fontSize: 13 }}
+            >
+              {isPendingWindow ? 'Saving…' : 'Save Submission Window'}
             </button>
           </div>
         </div>
