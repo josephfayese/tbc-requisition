@@ -6,29 +6,13 @@ import { formatNaira, fmtDate, formatHours } from '@/lib/utils'
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
-interface LineItem {
-  id: number
-  description: string
-  amount: number | string
-  status: string
-  paid_at: string | null
-  decided_at: string | null
-  created_at: string
-  retirement_due_at: string | null
-  req_id: number
-  requisitions: {
-    req_number: string
-    dept: string
-    user_id: string
-    profiles: { name: string } | null
-  }
-}
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 interface Props {
   profileName: string
   profileRole: string
-  allItems: LineItem[]
-  reconciledReqIds: number[]
+  allItems: any[]
+  reconciledReqIds: (number | null)[]
   approvedCount: number
 }
 
@@ -81,7 +65,7 @@ interface Insight {
 }
 
 function computeInsights(
-  items: LineItem[],
+  items: any[],
   rejectionRate: number,
   avgSlaHours: number | null,
   overdueCount: number,
