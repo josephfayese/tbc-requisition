@@ -17,7 +17,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Call payment-reminders endpoint
+        env:
+          APP_URL: ${{ secrets.APP_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
         run: |
+          APP_URL="${APP_URL%/}"          # strip trailing slash if any
+          APP_URL="$(echo -n "$APP_URL")" # strip trailing whitespace/newlines
+          if [ -z "$APP_URL" ]; then echo "::error::APP_URL secret is not set"; exit 1; fi
           curl --fail-with-body -sS \
-            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
-            "${{ secrets.APP_URL }}/api/cron/payment-reminders"
+            -H "Authorization: Bearer ${CRON_SECRET}" \
+            "${APP_URL}/api/cron/payment-reminders"
