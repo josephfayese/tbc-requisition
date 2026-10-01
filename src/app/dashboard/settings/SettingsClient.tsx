@@ -15,10 +15,10 @@ const ALL_ROLES = [
 ]
 
 const MODULES = [
-  { key: 'approve', label: 'Requisition Queue', description: 'Who can view and act on pending requisitions' },
-  { key: 'payments', label: 'Payment Queue', description: 'Who can see approved items awaiting bank payment' },
+  { key: 'approve', label: 'Requisition queue', description: 'Who can view and act on pending requisitions' },
+  { key: 'payments', label: 'Payment queue', description: 'Who can see approved items awaiting bank payment' },
   { key: 'reconciliation', label: 'Reconciliation', description: 'Who can view and mark reconciliation sign-offs' },
-  { key: 'retirement', label: 'Fund Retirement', description: 'Who can submit retirement notes on paid items' },
+  { key: 'retirement', label: 'Fund retirement', description: 'Who can submit retirement notes on paid items' },
 ]
 
 interface Props {
@@ -68,92 +68,84 @@ export default function SettingsClient({ moduleVisibility: initial, viewerPassco
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
 
-      {/* ── Group Dashboard Access ── */}
+      {/* Group Dashboard Access */}
       <div>
-        <div className="section-title" style={{ marginBottom: 12 }}><span className="bar" />Group Dashboard Access</div>
-        <div className="card" style={{ padding: '20px 24px' }}>
+        <h2 style={{ fontSize: 13, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-muted)', marginBottom: 12 }}>Group dashboard access</h2>
+        <div className="fd-card" style={{ padding: '20px 24px' }}>
           <div style={{ marginBottom: 16 }}>
-            <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--ink)' }}>Group Dashboard (Viewer)</div>
-            <div style={{ fontSize: 12, color: 'var(--ink-4)', marginTop: 2 }}>
-              Control who can access the read-only group dashboard at <span style={{ fontFamily: 'var(--mono)', fontSize: 11 }}>/dashboard/viewer</span>
+            <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-title)' }}>Group dashboard (viewer)</div>
+            <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>
+              Control who can access the read-only group dashboard at <code style={{ fontSize: 11 }}>/dashboard/viewer</code>
             </div>
           </div>
 
           {/* Open toggle */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', background: 'var(--bg-tint)', borderRadius: 10, border: '1px solid var(--line)', marginBottom: 16 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', background: 'var(--surface-tint)', borderRadius: 10, border: '1px solid var(--border-default)', marginBottom: 16 }}>
             <div>
-              <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink)' }}>Open to everyone (no passcode)</div>
-              <div style={{ fontSize: 11, color: 'var(--ink-4)', marginTop: 2 }}>
+              <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-title)' }}>Open to everyone (no passcode)</div>
+              <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
                 {viewerOpen ? 'Anyone with the link can view the group dashboard' : 'A passcode is required to unlock the group dashboard'}
               </div>
             </div>
-            <button
-              type="button"
-              onClick={() => setViewerOpen((o) => !o)}
-              className="toggle-track"
-              style={{ background: viewerOpen ? 'var(--brand)' : 'var(--line-2)', flexShrink: 0 }}
-              aria-label="Toggle open access"
-            >
-              <div className="toggle-knob" style={{ transform: viewerOpen ? 'translateX(16px)' : 'translateX(0)' }} />
-            </button>
+            <label className="fd-switch" style={{ flexShrink: 0 }}>
+              <input type="checkbox" checked={viewerOpen} onChange={() => setViewerOpen((o) => !o)} aria-label="Toggle open access" />
+              <span className="fd-switch__track" />
+              <span className="fd-switch__thumb" />
+            </label>
           </div>
 
           {/* Passcode field */}
           {!viewerOpen && (
             <div style={{ marginBottom: 16 }}>
-              <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--ink-3)', marginBottom: 6 }}>
-                Group Passcode
-              </label>
-              <div style={{ display: 'flex', gap: 8 }}>
-                <input
-                  className="li-input"
-                  value={passcode}
-                  onChange={(e) => setPasscode(e.target.value.toUpperCase())}
-                  placeholder="Min. 4 characters"
-                  style={{ fontFamily: 'var(--mono)', letterSpacing: '0.12em', fontWeight: 700, maxWidth: 220 }}
-                  maxLength={20}
-                />
-                <div style={{ fontSize: 12, color: 'var(--ink-4)', display: 'flex', alignItems: 'center' }}>
-                  Share this with group members so they can unlock the dashboard
+              <div className="fd-field">
+                <label className="fd-field__label">Group passcode</label>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <input
+                    className="fd-input"
+                    value={passcode}
+                    onChange={(e) => setPasscode(e.target.value.toUpperCase())}
+                    placeholder="Min. 4 characters"
+                    style={{ letterSpacing: '0.12em', fontWeight: 700, maxWidth: 220 }}
+                    maxLength={20}
+                  />
+                  <div style={{ fontSize: 12, color: 'var(--text-muted)', display: 'flex', alignItems: 'center' }}>
+                    Share this with group members so they can unlock the dashboard
+                  </div>
                 </div>
               </div>
             </div>
           )}
 
           <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-            <button className="pri-btn" onClick={handleSaveViewer} disabled={isPendingViewer} style={{ fontSize: 13 }}>
-              {isPendingViewer ? 'Saving…' : 'Save Viewer Settings'}
+            <button className="fd-btn fd-btn--primary fd-btn--sm" onClick={handleSaveViewer} disabled={isPendingViewer}>
+              {isPendingViewer ? 'Saving...' : 'Save viewer settings'}
             </button>
           </div>
         </div>
       </div>
 
-      {/* ── Submission Window ── */}
+      {/* Submission Window */}
       <div>
-        <div className="section-title" style={{ marginBottom: 12 }}><span className="bar" />Submission Window</div>
-        <div className="card" style={{ padding: '20px 24px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', background: 'var(--bg-tint)', borderRadius: 10, border: '1px solid var(--line)', marginBottom: 16 }}>
+        <h2 style={{ fontSize: 13, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-muted)', marginBottom: 12 }}>Submission window</h2>
+        <div className="fd-card" style={{ padding: '20px 24px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', background: 'var(--surface-tint)', borderRadius: 10, border: '1px solid var(--border-default)', marginBottom: 16 }}>
             <div>
-              <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink)' }}>Enforce Mon–Wed cutoff</div>
-              <div style={{ fontSize: 11, color: 'var(--ink-4)', marginTop: 2 }}>
+              <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-title)' }}>Enforce Mon-Wed cutoff</div>
+              <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
                 {windowEnabled
                   ? 'Requisitions can only be submitted Monday to Wednesday (WAT). Admin is always exempt.'
                   : 'Cutoff is disabled — requisitions can be submitted any day of the week.'}
               </div>
             </div>
-            <button
-              type="button"
-              onClick={() => setWindowEnabled((v) => !v)}
-              className="toggle-track"
-              style={{ background: windowEnabled ? 'var(--brand)' : 'var(--line-2)', flexShrink: 0 }}
-              aria-label="Toggle submission window"
-            >
-              <div className="toggle-knob" style={{ transform: windowEnabled ? 'translateX(16px)' : 'translateX(0)' }} />
-            </button>
+            <label className="fd-switch" style={{ flexShrink: 0 }}>
+              <input type="checkbox" checked={windowEnabled} onChange={() => setWindowEnabled((v) => !v)} aria-label="Toggle submission window" />
+              <span className="fd-switch__track" />
+              <span className="fd-switch__thumb" />
+            </label>
           </div>
           <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
             <button
-              className="pri-btn"
+              className="fd-btn fd-btn--primary fd-btn--sm"
               onClick={() => {
                 startWindow(async () => {
                   const result = await updateSubmissionWindow(windowEnabled)
@@ -163,26 +155,25 @@ export default function SettingsClient({ moduleVisibility: initial, viewerPassco
                 })
               }}
               disabled={isPendingWindow}
-              style={{ fontSize: 13 }}
             >
-              {isPendingWindow ? 'Saving…' : 'Save Submission Window'}
+              {isPendingWindow ? 'Saving...' : 'Save submission window'}
             </button>
           </div>
         </div>
       </div>
 
-      {/* ── Module Visibility ── */}
+      {/* Module Visibility */}
       <div>
-        <div className="section-title" style={{ marginBottom: 12 }}><span className="bar" />Module Visibility</div>
+        <h2 style={{ fontSize: 13, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-muted)', marginBottom: 12 }}>Module visibility</h2>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           {MODULES.map((mod) => {
             const enabled = visibility[mod.key] ?? []
             return (
-              <div key={mod.key} className="card" style={{ padding: '20px 24px' }}>
+              <div key={mod.key} className="fd-card" style={{ padding: '20px 24px' }}>
                 <div style={{ marginBottom: 14 }}>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--ink)' }}>{mod.label}</div>
-                  <div style={{ fontSize: 12, color: 'var(--ink-4)', marginTop: 2 }}>{mod.description}</div>
-                  <div style={{ fontSize: 11, color: 'var(--brand)', marginTop: 4, fontWeight: 500 }}>Admin always has access</div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-title)' }}>{mod.label}</div>
+                  <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>{mod.description}</div>
+                  <div style={{ fontSize: 11, color: 'var(--green-700)', marginTop: 4, fontWeight: 500 }}>Admin always has access</div>
                 </div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
                   {ALL_ROLES.map((role) => {
@@ -195,19 +186,14 @@ export default function SettingsClient({ moduleVisibility: initial, viewerPassco
                         style={{
                           display: 'inline-flex', alignItems: 'center', gap: 7,
                           padding: '7px 12px', borderRadius: 8,
-                          border: `1px solid ${on ? 'var(--brand)' : 'var(--line-2)'}`,
-                          background: on ? 'var(--brand-soft)' : 'var(--bg-raised)',
-                          color: on ? 'var(--brand)' : 'var(--ink-3)',
+                          border: `1px solid ${on ? 'var(--green-700)' : 'var(--border-divider)'}`,
+                          background: on ? 'var(--green-50)' : 'var(--surface-card)',
+                          color: on ? 'var(--green-700)' : 'var(--text-secondary)',
                           font: 'inherit', fontSize: 12, fontWeight: on ? 600 : 400,
                           cursor: 'pointer', transition: 'all 140ms',
                         }}
                       >
-                        <span style={{
-                          width: 14, height: 14, borderRadius: 3,
-                          border: `1.5px solid ${on ? 'var(--brand)' : 'var(--line-2)'}`,
-                          background: on ? 'var(--brand)' : 'transparent',
-                          display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-                        }}>
+                        <span className="fd-check" data-checked={on ? '' : undefined}>
                           {on && <svg width="9" height="9" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>}
                         </span>
                         {role.label}
@@ -220,8 +206,8 @@ export default function SettingsClient({ moduleVisibility: initial, viewerPassco
           })}
 
           <div style={{ display: 'flex', justifyContent: 'flex-end', paddingTop: 4 }}>
-            <button className="pri-btn" onClick={handleSaveVisibility} disabled={isPendingVis}>
-              {isPendingVis ? 'Saving…' : 'Save Module Visibility'}
+            <button className="fd-btn fd-btn--primary" onClick={handleSaveVisibility} disabled={isPendingVis}>
+              {isPendingVis ? 'Saving...' : 'Save module visibility'}
             </button>
           </div>
         </div>
