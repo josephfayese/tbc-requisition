@@ -58,10 +58,9 @@ export default function ApproveClient({ items, canApprove }: { items: Item[]; ca
 
   if (items.length === 0) {
     return (
-      <div className="card" style={{ padding: 48, textAlign: 'center' }}>
-        <div style={{ fontSize: 32, marginBottom: 12 }}>✓</div>
-        <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--ink)' }}>Queue is clear</div>
-        <div style={{ fontSize: 13, color: 'var(--ink-3)', marginTop: 6 }}>No pending items at the moment.</div>
+      <div className="fd-empty">
+        <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-body)' }}>Queue is clear</div>
+        <div style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 6 }}>No pending items at the moment.</div>
       </div>
     )
   }
@@ -76,9 +75,9 @@ export default function ApproveClient({ items, canApprove }: { items: Item[]; ca
   return (
     <>
       <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 16 }}>
-        <div className="seg">
-          <button data-on={view === 'grouped' ? 'true' : 'false'} onClick={() => setView('grouped')}>Grouped</button>
-          <button data-on={view === 'flat' ? 'true' : 'false'} onClick={() => setView('flat')}>Flat list</button>
+        <div className="fd-seg">
+          <button className="fd-seg__btn" aria-pressed={view === 'grouped'} onClick={() => setView('grouped')}>Grouped</button>
+          <button className="fd-seg__btn" aria-pressed={view === 'flat'} onClick={() => setView('flat')}>Flat list</button>
         </div>
       </div>
 
@@ -87,27 +86,28 @@ export default function ApproveClient({ items, canApprove }: { items: Item[]; ca
           {Object.values(grouped).map((group) => {
             const groupTotal = group.items.reduce((s, i) => s + i.amount, 0)
             return (
-              <div key={group.req_number} className="card" style={{ overflow: 'hidden' }}>
-                <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--line)', background: 'var(--bg-tint)' }}>
+              <div key={group.req_number} className="fd-card" style={{ overflow: 'hidden' }}>
+                <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--border-divider)', background: 'var(--bg-tint)' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
                     <div>
-                      <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--ink)', fontFamily: 'var(--mono)' }}>{group.req_number}</div>
-                      <div style={{ fontSize: 11, color: 'var(--ink-4)', marginTop: 2 }}>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-body)', fontFamily: 'var(--mono)' }}>{group.req_number}</div>
+                      <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
                         {group.dept} · by {group.requester} · {fmtDate(group.req_created_at)}
                       </div>
                     </div>
-                    <div style={{ marginLeft: 'auto', fontSize: 13, fontWeight: 700, color: 'var(--ink)', fontVariantNumeric: 'tabular-nums' }}>
+                    <div style={{ marginLeft: 'auto', fontSize: 13, fontWeight: 700, color: 'var(--text-body)', fontVariantNumeric: 'tabular-nums' }}>
                       {formatNaira(groupTotal)}
                     </div>
                   </div>
                   {group.notes && (
-                    <div style={{ marginTop: 8, fontSize: 12, color: 'var(--ink-3)', background: 'var(--bg-raised)', border: '1px solid var(--line)', borderRadius: 6, padding: '6px 10px' }}>
-                      <span style={{ fontWeight: 600, color: 'var(--ink-4)', textTransform: 'uppercase', fontSize: 10, letterSpacing: '0.08em' }}>Justification: </span>
+                    <div style={{ marginTop: 8, fontSize: 12, color: 'var(--text-muted)', background: 'var(--surface-card)', border: '1px solid var(--border-divider)', borderRadius: 6, padding: '6px 10px' }}>
+                      <span style={{ fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', fontSize: 10, letterSpacing: '0.08em' }}>Justification: </span>
                       {group.notes}
                     </div>
                   )}
                 </div>
-                <table className="tbl">
+                <div className="fd-table-wrap">
+                <table className="fd-table">
                   <thead>
                     <tr>
                       <th>Description</th>
@@ -120,23 +120,23 @@ export default function ApproveClient({ items, canApprove }: { items: Item[]; ca
                   <tbody>
                     {group.items.map((item) => (
                       <tr key={item.id}>
-                        <td className="strong">
+                        <td style={{ fontWeight: 600 }}>
                           {item.description}
                           {item.resubmission_note && (
-                            <div style={{ marginTop: 4, fontSize: 11, color: 'var(--brand)', background: 'var(--brand-soft)', border: '1px solid var(--brand-line)', borderRadius: 4, padding: '4px 8px' }}>
+                            <div style={{ marginTop: 4, fontSize: 11, color: 'var(--green-700)', background: 'var(--approved-bg)', border: '1px solid rgba(30,105,52,.18)', borderRadius: 4, padding: '4px 8px' }}>
                               <span style={{ fontWeight: 700, textTransform: 'uppercase', fontSize: 10, letterSpacing: '0.06em' }}>Resubmission note: </span>
                               {item.resubmission_note}
                             </div>
                           )}
                         </td>
-                        <td style={{ textAlign: 'center', color: 'var(--ink-3)' }}>{item.qty}</td>
-                        <td className="num" style={{ color: 'var(--ink-3)' }}>{item.unit_price ? formatNaira(item.unit_price) : '—'}</td>
-                        <td className="num strong">{formatNaira(item.amount)}</td>
+                        <td style={{ textAlign: 'center', color: 'var(--text-muted)' }}>{item.qty}</td>
+                        <td className="fd-num" style={{ color: 'var(--text-muted)' }}>{item.unit_price ? formatNaira(item.unit_price) : '—'}</td>
+                        <td className="fd-num" style={{ fontWeight: 600 }}>{formatNaira(item.amount)}</td>
                         {canApprove && (
                           <td>
                             <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
-                              <button className="act-btn act-reject" disabled={pendingId === item.id} onClick={() => setRejectTarget({ id: item.id, description: item.description })}>✕ Reject</button>
-                              <button className="act-btn act-approve" disabled={pendingId === item.id} onClick={() => handleApprove(item.id, item.description)}>
+                              <button className="fd-btn fd-btn--danger fd-btn--sm" disabled={pendingId === item.id} onClick={() => setRejectTarget({ id: item.id, description: item.description })}>✕ Reject</button>
+                              <button className="fd-btn fd-btn--primary fd-btn--sm" disabled={pendingId === item.id} onClick={() => handleApprove(item.id, item.description)}>
                                 {pendingId === item.id ? '…' : '✓ Approve'}
                               </button>
                             </div>
@@ -146,17 +146,19 @@ export default function ApproveClient({ items, canApprove }: { items: Item[]; ca
                     ))}
                   </tbody>
                 </table>
+                </div>
               </div>
             )
           })}
         </div>
       ) : (
-        <div className="table-wrap">
-          <div className="table-head">
-            <span className="card-title">All Pending Items</span>
-            <span style={{ fontSize: 12, color: 'var(--ink-4)' }}>{items.length} items · {formatNaira(items.reduce((s, i) => s + i.amount, 0))} total</span>
+        <div className="fd-card fd-card--flush">
+          <div className="fd-card__head">
+            <span className="fd-card__title">All pending items</span>
+            <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{items.length} items · {formatNaira(items.reduce((s, i) => s + i.amount, 0))} total</span>
           </div>
-          <table className="tbl">
+          <div className="fd-table-wrap">
+          <table className="fd-table">
             <thead>
               <tr>
                 <th>Req #</th><th>Description</th><th>Dept</th><th>By</th>
@@ -168,23 +170,23 @@ export default function ApproveClient({ items, canApprove }: { items: Item[]; ca
               {items.map((item) => (
                 <tr key={item.id}>
                   <td style={{ fontFamily: 'var(--mono)', fontSize: 12 }}>{item.req_number}</td>
-                  <td className="strong">
+                  <td style={{ fontWeight: 600 }}>
                     {item.description}
                     {item.resubmission_note && (
-                      <div style={{ marginTop: 4, fontSize: 11, color: 'var(--brand)', background: 'var(--brand-soft)', border: '1px solid var(--brand-line)', borderRadius: 4, padding: '4px 8px' }}>
+                      <div style={{ marginTop: 4, fontSize: 11, color: 'var(--green-700)', background: 'var(--approved-bg)', border: '1px solid rgba(30,105,52,.18)', borderRadius: 4, padding: '4px 8px' }}>
                         <span style={{ fontWeight: 700, textTransform: 'uppercase', fontSize: 10, letterSpacing: '0.06em' }}>Resubmission note: </span>
                         {item.resubmission_note}
                       </div>
                     )}
                   </td>
                   <td>{item.dept}</td>
-                  <td style={{ fontSize: 12, color: 'var(--ink-3)' }}>{item.requester}</td>
-                  <td className="num">{formatNaira(item.amount)}</td>
+                  <td style={{ fontSize: 12, color: 'var(--text-muted)' }}>{item.requester}</td>
+                  <td className="fd-num">{formatNaira(item.amount)}</td>
                   {canApprove && (
                     <td>
                       <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
-                        <button className="act-btn act-reject" disabled={pendingId === item.id} onClick={() => setRejectTarget({ id: item.id, description: item.description })}>✕ Reject</button>
-                        <button className="act-btn act-approve" disabled={pendingId === item.id} onClick={() => handleApprove(item.id, item.description)}>
+                        <button className="fd-btn fd-btn--danger fd-btn--sm" disabled={pendingId === item.id} onClick={() => setRejectTarget({ id: item.id, description: item.description })}>✕ Reject</button>
+                        <button className="fd-btn fd-btn--primary fd-btn--sm" disabled={pendingId === item.id} onClick={() => handleApprove(item.id, item.description)}>
                           {pendingId === item.id ? '…' : '✓ Approve'}
                         </button>
                       </div>
@@ -194,26 +196,27 @@ export default function ApproveClient({ items, canApprove }: { items: Item[]; ca
               ))}
             </tbody>
           </table>
+          </div>
         </div>
       )}
 
       {/* Inline reject modal */}
       {rejectTarget && (
-        <div className="modal-scrim" onClick={(e) => { if (e.target === e.currentTarget) { setRejectTarget(null); setRejectReason('') } }}>
-          <div className="modal-card">
-            <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--line)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div className="fd-scrim" onClick={(e) => { if (e.target === e.currentTarget) { setRejectTarget(null); setRejectReason('') } }}>
+          <div className="fd-dialog">
+            <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-divider)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div>
-                <div style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--neg)', marginBottom: 4 }}>Reject Item</div>
+                <div style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--rejected-fg)', marginBottom: 4 }}>Reject item</div>
                 <div style={{ fontSize: 15, fontWeight: 700 }}>{rejectTarget.description}</div>
               </div>
-              <button className="x-btn" onClick={() => { setRejectTarget(null); setRejectReason('') }}>✕</button>
+              <button className="fd-iconbtn" onClick={() => { setRejectTarget(null); setRejectReason('') }}>✕</button>
             </div>
             <div style={{ padding: '20px 24px' }}>
-              <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--ink-3)', marginBottom: 8 }}>
-                Reason <span style={{ color: 'var(--neg)' }}>*</span>
+              <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 8 }}>
+                Reason <span style={{ color: 'var(--rejected-fg)' }}>*</span>
               </label>
               <textarea
-                className="li-input"
+                className="fd-input"
                 rows={3}
                 autoFocus
                 placeholder="Reason for rejection — visible to the requester…"
@@ -222,9 +225,9 @@ export default function ApproveClient({ items, canApprove }: { items: Item[]; ca
                 style={{ resize: 'vertical', minHeight: 80 }}
               />
             </div>
-            <div style={{ padding: '16px 24px', borderTop: '1px solid var(--line)', display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
-              <button className="ghost-btn" onClick={() => { setRejectTarget(null); setRejectReason('') }}>Cancel</button>
-              <button className="act-btn act-reject" onClick={handleRejectSubmit} disabled={!rejectReason.trim() || pendingId !== null} style={{ opacity: !rejectReason.trim() ? 0.5 : 1 }}>
+            <div style={{ padding: '16px 24px', borderTop: '1px solid var(--border-divider)', display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+              <button className="fd-btn fd-btn--ghost" onClick={() => { setRejectTarget(null); setRejectReason('') }}>Cancel</button>
+              <button className="fd-btn fd-btn--danger fd-btn--sm" onClick={handleRejectSubmit} disabled={!rejectReason.trim() || pendingId !== null} style={{ opacity: !rejectReason.trim() ? 0.5 : 1 }}>
                 {pendingId !== null ? 'Rejecting…' : 'Confirm Rejection'}
               </button>
             </div>
