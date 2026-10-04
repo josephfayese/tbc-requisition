@@ -50,11 +50,11 @@ interface Props {
   stats: ViewerStats | null
 }
 
-function getSeverity(action: string): string {
-  if (action.startsWith('Approved') || action.startsWith('Paid')) return 'pos'
-  if (action.startsWith('Rejected')) return 'neg'
-  if (action.startsWith('Requisition')) return 'info'
-  return 'neutral'
+function getActionBadge(action: string): string {
+  if (action.startsWith('Approved') || action.startsWith('Paid')) return 'approved'
+  if (action.startsWith('Rejected')) return 'rejected'
+  if (action.startsWith('Requisition')) return 'paid'
+  return 'retired'
 }
 
 export default function ViewerClient({ pending, feed, totalPending, stats }: Props) {
@@ -83,25 +83,19 @@ export default function ViewerClient({ pending, feed, totalPending, stats }: Pro
       <div style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div style={{ width: '100%', maxWidth: 360 }}>
           <div style={{ textAlign: 'center', marginBottom: 28 }}>
-            <div style={{ fontSize: 36, marginBottom: 12 }}>👁</div>
-            <div className="masthead-eyebrow" style={{ justifyContent: 'center' }}>
-              <span className="bar" />Group Dashboard
-            </div>
-            <h2 style={{ fontSize: 22, fontWeight: 800, color: 'var(--ink)', margin: '8px 0 6px', letterSpacing: '-0.02em' }}>
-              Passcode Required
+            <h2 style={{ fontSize: 22, fontWeight: 800, color: 'var(--text-title)', margin: '8px 0 6px', letterSpacing: '-0.02em', fontFamily: 'var(--font-display)' }}>
+              Passcode required
             </h2>
-            <p style={{ fontSize: 13, color: 'var(--ink-3)', margin: 0 }}>
+            <p style={{ fontSize: 13, color: 'var(--text-secondary)', margin: 0 }}>
               Enter the group passcode to view the live requisition dashboard.
             </p>
           </div>
-          <div className="card" style={{ padding: 24 }}>
+          <div className="fd-card" style={{ padding: 24 }}>
             <form onSubmit={handleUnlock} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-              <div>
-                <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--ink-3)', marginBottom: 6 }}>
-                  Group Passcode
-                </label>
+              <div className="fd-field">
+                <label className="fd-field__label">Group passcode</label>
                 <input
-                  className="li-input"
+                  className="fd-input"
                   type="text"
                   placeholder="Enter passcode"
                   value={input}
@@ -110,15 +104,15 @@ export default function ViewerClient({ pending, feed, totalPending, stats }: Pro
                   style={{ textTransform: 'uppercase', letterSpacing: '0.15em', fontWeight: 700, fontSize: 16, textAlign: 'center' }}
                 />
                 {error && (
-                  <div style={{ marginTop: 8, fontSize: 12, color: 'var(--neg)', fontWeight: 500 }}>{error}</div>
+                  <div style={{ marginTop: 8, fontSize: 12, color: 'var(--rejected-fg)', fontWeight: 500 }}>{error}</div>
                 )}
               </div>
-              <button type="submit" className="pri-btn" style={{ width: '100%', justifyContent: 'center' }} disabled={isVerifying}>
-                {isVerifying ? 'Verifying…' : 'Unlock Dashboard'}
+              <button type="submit" className="fd-btn fd-btn--primary fd-btn--block" disabled={isVerifying}>
+                {isVerifying ? 'Verifying...' : 'Unlock dashboard'}
               </button>
             </form>
           </div>
-          <div style={{ textAlign: 'center', marginTop: 16, fontSize: 12, color: 'var(--ink-5)' }}>
+          <div style={{ textAlign: 'center', marginTop: 16, fontSize: 12, color: 'var(--text-disabled)' }}>
             Read-only · No login required
           </div>
         </div>
@@ -127,84 +121,88 @@ export default function ViewerClient({ pending, feed, totalPending, stats }: Pro
   }
 
   return (
-    <div className="page" style={{ maxWidth: 1000 }}>
+    <div>
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, marginBottom: 28, flexWrap: 'wrap' }}>
+      <div className="fd-pagehead">
         <div>
-          <div className="masthead-eyebrow"><span className="bar" />Group Dashboard</div>
-          <h1 style={{ fontSize: 28, fontWeight: 800, letterSpacing: '-0.02em', color: 'var(--ink)', margin: '6px 0 0' }}>
-            Requisitions <em style={{ fontStyle: 'italic', color: 'var(--brand)' }}>Live View</em>
-          </h1>
-          <p style={{ fontSize: 13, color: 'var(--ink-3)', marginTop: 6 }}>Read-only · Refreshed on each page load</p>
+          <h1 className="fd-pagehead__title">Group dashboard</h1>
+          <p className="fd-pagehead__sub">Read-only · Refreshed on each page load</p>
         </div>
-        <button
-          onClick={() => setUnlocked(false)}
-          className="ghost-btn"
-          style={{ fontSize: 12 }}
-        >
-          🔒 Lock
+        <button onClick={() => setUnlocked(false)} className="fd-btn fd-btn--ghost fd-btn--sm">
+          Lock
         </button>
       </div>
 
-      {/* Summary stat */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 16, marginBottom: 12 }}>
-        <StatCard label="Pending Items" value={String(pending.length)} sub="awaiting approval" color="var(--warn)" />
-        <StatCard label="Total Pending Value" value={formatNaira(totalPending)} sub="across all departments" color="var(--brand)" />
-        <StatCard label="Recent Decisions" value={String(feed.filter(f => f.action.startsWith('Approved') || f.action.startsWith('Rejected')).length)} sub="in audit log" color="var(--info)" />
+      {/* Summary stats */}
+      <div className="kit-stats" style={{ marginBottom: 12 }}>
+        <div className="fd-card" style={{ padding: '16px 18px' }}>
+          <div className="fd-metric"><span className="fd-metric__label">Pending items</span><span className="fd-metric__value">{pending.length}</span><span className="fd-metric__sub">awaiting approval</span></div>
+        </div>
+        <div className="fd-card" style={{ padding: '16px 18px' }}>
+          <div className="fd-metric"><span className="fd-metric__label">Total pending value</span><span className="fd-metric__value">{formatNaira(totalPending)}</span><span className="fd-metric__sub">across all departments</span></div>
+        </div>
+        <div className="fd-card" style={{ padding: '16px 18px' }}>
+          <div className="fd-metric"><span className="fd-metric__label">Recent decisions</span><span className="fd-metric__value">{feed.filter(f => f.action.startsWith('Approved') || f.action.startsWith('Rejected')).length}</span><span className="fd-metric__sub">in audit log</span></div>
+        </div>
       </div>
 
       {stats && (
         <>
-          {/* Core flow stats (mirrors main dashboard) */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 16, marginBottom: 12 }}>
-            <StatCard label="Outstanding" value={formatNaira(stats.totalOutstanding)} sub={`${stats.outstandingCount} paid, not retired`} color={stats.totalOutstanding > 0 ? 'var(--warn)' : 'var(--ink-4)'} />
-            <StatCard label="Total Retired" value={formatNaira(stats.totalRetired)} sub="funds fully accounted for" color="var(--pos)" />
-            <StatCard label="Reconciled Reqs" value={String(stats.reconciledCount)} sub="signed off by finance" color="var(--brand)" />
-            <StatCard label="Payment Queue" value={String(stats.paymentQueueCount)} sub="approved, awaiting payment" color={stats.paymentQueueCount > 0 ? 'var(--brand)' : 'var(--ink-4)'} />
+          {/* Core flow stats */}
+          <div className="kit-stats" style={{ marginBottom: 12 }}>
+            <div className="fd-card" style={{ padding: '16px 18px' }}>
+              <div className="fd-metric"><span className="fd-metric__label">Outstanding</span><span className={`fd-metric__value${stats.totalOutstanding > 0 ? ' fd-metric__value--warn' : ''}`}>{formatNaira(stats.totalOutstanding)}</span><span className="fd-metric__sub">{stats.outstandingCount} paid, not retired</span></div>
+            </div>
+            <div className="fd-card" style={{ padding: '16px 18px' }}>
+              <div className="fd-metric"><span className="fd-metric__label">Total retired</span><span className="fd-metric__value">{formatNaira(stats.totalRetired)}</span><span className="fd-metric__sub">funds fully accounted for</span></div>
+            </div>
+            <div className="fd-card" style={{ padding: '16px 18px' }}>
+              <div className="fd-metric"><span className="fd-metric__label">Reconciled reqs</span><span className="fd-metric__value">{stats.reconciledCount}</span><span className="fd-metric__sub">signed off by finance</span></div>
+            </div>
+            <div className="fd-card" style={{ padding: '16px 18px' }}>
+              <div className="fd-metric"><span className="fd-metric__label">Payment queue</span><span className="fd-metric__value">{stats.paymentQueueCount}</span><span className="fd-metric__sub">approved, awaiting payment</span></div>
+            </div>
           </div>
 
           {/* Accounting KPIs */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 16, marginBottom: 12 }}>
-            <StatCard label="YTD Disbursed" value={formatNaira(stats.ytdTotal)} sub="paid & retired this year" color="var(--ink)" />
-            <StatCard label="Pipeline Value" value={formatNaira(stats.pipelineTotal)} sub="pending + approved items" color="var(--purple)" />
-            <StatCard label="Rejection Rate" value={`${stats.rejectionRate}%`} sub="of all decided items" color={stats.rejectionRate > 20 ? 'var(--neg)' : 'var(--ink-4)'} />
+          <div className="kit-stats" style={{ marginBottom: 12 }}>
+            <div className="fd-card" style={{ padding: '16px 18px' }}>
+              <div className="fd-metric"><span className="fd-metric__label">YTD disbursed</span><span className="fd-metric__value">{formatNaira(stats.ytdTotal)}</span><span className="fd-metric__sub">paid &amp; retired this year</span></div>
+            </div>
+            <div className="fd-card" style={{ padding: '16px 18px' }}>
+              <div className="fd-metric"><span className="fd-metric__label">Pipeline value</span><span className="fd-metric__value">{formatNaira(stats.pipelineTotal)}</span><span className="fd-metric__sub">pending + approved items</span></div>
+            </div>
+            <div className="fd-card" style={{ padding: '16px 18px' }}>
+              <div className="fd-metric"><span className="fd-metric__label">Rejection rate</span><span className={`fd-metric__value${stats.rejectionRate > 20 ? ' fd-metric__value--warn' : ''}`}>{stats.rejectionRate}%</span><span className="fd-metric__sub">of all decided items</span></div>
+            </div>
           </div>
 
           {/* Payment SLA */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 16, marginBottom: 28 }}>
-            <StatCard
-              label="Avg Approval → Payment"
-              value={stats.avgSlaHours !== null ? formatHours(stats.avgSlaHours) : '—'}
-              sub="benchmark SLA: 2 hours"
-              color={stats.avgSlaHours !== null && stats.avgSlaHours > 2 ? 'var(--neg)' : 'var(--pos)'}
-            />
-            <StatCard
-              label="Within 2h SLA"
-              value={stats.slaPct !== null ? `${stats.slaPct}%` : '—'}
-              sub={`${stats.withinSla} of ${stats.slaCount} payments`}
-              color={stats.slaPct !== null && stats.slaPct < 80 ? 'var(--warn)' : 'var(--pos)'}
-            />
-            <StatCard
-              label="SLA Breaches"
-              value={String(stats.slaCount - stats.withinSla)}
-              sub="paid after 2 hours"
-              color={stats.slaCount - stats.withinSla > 0 ? 'var(--neg)' : 'var(--ink-4)'}
-            />
+          <div className="kit-stats" style={{ marginBottom: 28 }}>
+            <div className="fd-card" style={{ padding: '16px 18px' }}>
+              <div className="fd-metric"><span className="fd-metric__label">Avg approval → payment</span><span className="fd-metric__value">{stats.avgSlaHours !== null ? formatHours(stats.avgSlaHours) : '—'}</span><span className="fd-metric__sub">benchmark SLA: 2 hours</span></div>
+            </div>
+            <div className="fd-card" style={{ padding: '16px 18px' }}>
+              <div className="fd-metric"><span className="fd-metric__label">Within 2h SLA</span><span className="fd-metric__value">{stats.slaPct !== null ? `${stats.slaPct}%` : '—'}</span><span className="fd-metric__sub">{stats.withinSla} of {stats.slaCount} payments</span></div>
+            </div>
+            <div className="fd-card" style={{ padding: '16px 18px' }}>
+              <div className="fd-metric"><span className="fd-metric__label">SLA breaches</span><span className={`fd-metric__value${(stats.slaCount - stats.withinSla) > 0 ? ' fd-metric__value--warn' : ''}`}>{stats.slaCount - stats.withinSla}</span><span className="fd-metric__sub">paid after 2 hours</span></div>
+            </div>
           </div>
 
           {/* Status funnel */}
-          <div className="section-title" style={{ marginBottom: 12 }}><span className="bar" />Requisition Pipeline Breakdown</div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 10, marginBottom: 28 }}>
+          <h2 style={{ fontSize: 13, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-muted)', marginBottom: 12 }}>Requisition pipeline breakdown</h2>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 12, marginBottom: 28 }}>
             {[
-              { key: 'pending', label: 'Pending', color: 'var(--warn)', bg: 'var(--warn-soft)' },
-              { key: 'approved', label: 'Approved', color: 'var(--pos)', bg: 'var(--pos-soft)' },
-              { key: 'paid', label: 'Paid', color: 'var(--brand)', bg: 'var(--brand-soft)' },
-              { key: 'retired', label: 'Retired', color: 'var(--ink)', bg: 'var(--bg-sunken)' },
-              { key: 'rejected', label: 'Rejected', color: 'var(--neg)', bg: 'var(--neg-soft)' },
+              { key: 'pending', label: 'Pending', color: 'var(--pending-fg)', bg: 'var(--pending-bg)' },
+              { key: 'approved', label: 'Approved', color: 'var(--approved-fg)', bg: 'var(--approved-bg)' },
+              { key: 'paid', label: 'Paid', color: 'var(--paid-fg)', bg: 'var(--paid-bg)' },
+              { key: 'retired', label: 'Retired', color: 'var(--text-title)', bg: 'var(--surface-canvas)' },
+              { key: 'rejected', label: 'Rejected', color: 'var(--rejected-fg)', bg: 'var(--rejected-bg)' },
             ].map(({ key, label, color, bg }) => {
               const s = stats.statusCounts[key] ?? { count: 0, amount: 0 }
               return (
-                <div key={key} className="card" style={{ padding: '14px 16px', background: bg, border: `1px solid ${color}22` }}>
+                <div key={key} className="fd-card" style={{ padding: '14px 16px', background: bg }}>
                   <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color, marginBottom: 6 }}>{label}</div>
                   <div style={{ fontSize: 20, fontWeight: 800, color, fontVariantNumeric: 'tabular-nums', marginBottom: 2 }}>{s.count}</div>
                   <div style={{ fontSize: 11, color, opacity: 0.75 }}>{s.amount > 0 ? formatNaira(s.amount) : '—'}</div>
@@ -214,91 +212,92 @@ export default function ViewerClient({ pending, feed, totalPending, stats }: Pro
           </div>
 
           {/* Spend by department */}
-          <div className="section-title" style={{ marginBottom: 12 }}><span className="bar" />Spend by Department</div>
-          <div className="card" style={{ marginBottom: 28, overflow: 'hidden' }}>
+          <h2 style={{ fontSize: 13, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-muted)', marginBottom: 12 }}>Spend by department</h2>
+          <div className="fd-card fd-card--flush" style={{ marginBottom: 28 }}>
             {stats.deptRows.length === 0 ? (
-              <div style={{ padding: '24px', textAlign: 'center', fontSize: 13, color: 'var(--ink-4)' }}>No disbursement data yet.</div>
+              <div style={{ padding: 24, textAlign: 'center', fontSize: 13, color: 'var(--text-muted)' }}>No disbursement data yet.</div>
             ) : (
-              <table className="tbl">
-                <thead>
-                  <tr>
-                    <th>Department</th>
-                    <th style={{ textAlign: 'right' }}>Disbursed</th>
-                    <th style={{ textAlign: 'right' }}>In Pipeline</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {stats.deptRows.map((d) => (
-                    <tr key={d.dept}>
-                      <td className="strong">{d.dept}</td>
-                      <td className="num" style={{ color: 'var(--pos)', fontWeight: 600 }}>{formatNaira(d.disbursed)}</td>
-                      <td className="num" style={{ color: 'var(--purple)', fontSize: 12 }}>{d.pipeline > 0 ? formatNaira(d.pipeline) : '—'}</td>
+              <div className="fd-table-wrap">
+                <table className="fd-table">
+                  <thead>
+                    <tr>
+                      <th>Department</th>
+                      <th className="fd-num">Disbursed</th>
+                      <th className="fd-num">In pipeline</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {stats.deptRows.map((d) => (
+                      <tr key={d.dept}>
+                        <td style={{ fontWeight: 600 }}>{d.dept}</td>
+                        <td className="fd-num" style={{ color: 'var(--approved-fg)', fontWeight: 600 }}>{formatNaira(d.disbursed)}</td>
+                        <td className="fd-num fd-muted" style={{ fontSize: 12 }}>{d.pipeline > 0 ? formatNaira(d.pipeline) : '—'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             )}
           </div>
 
           {/* Outstanding retirements */}
-          <div className="section-title" style={{ marginBottom: 12 }}>
-            <span className="bar" />Outstanding Retirements
-            {stats.outstandingCount > 0 && <span className="count">{stats.outstandingCount}</span>}
-          </div>
-          <div className="table-wrap" style={{ marginBottom: 28 }}>
+          <h2 style={{ fontSize: 13, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-muted)', marginBottom: 12 }}>
+            Outstanding retirements
+            {stats.outstandingCount > 0 && <span style={{ marginLeft: 8, fontSize: 11, background: 'var(--pending-bg)', color: 'var(--pending-fg)', padding: '2px 8px', borderRadius: 999, fontWeight: 700 }}>{stats.outstandingCount}</span>}
+          </h2>
+          <div className="fd-card fd-card--flush" style={{ marginBottom: 28 }}>
             {stats.outstandingReqs.length === 0 ? (
-              <div style={{ padding: '24px', textAlign: 'center', fontSize: 13, color: 'var(--ink-4)' }}>No paid items waiting for retirement.</div>
+              <div style={{ padding: 24, textAlign: 'center', fontSize: 13, color: 'var(--text-muted)' }}>No paid items waiting for retirement.</div>
             ) : (
-              <table className="tbl">
-                <thead>
-                  <tr>
-                    <th>Req #</th><th>Department</th><th>Requester</th><th>Items</th><th>Paid</th>
-                    <th style={{ textAlign: 'right' }}>Outstanding</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {stats.outstandingReqs.map((req) => (
-                    <tr key={req.req_number}>
-                      <td style={{ fontFamily: 'var(--mono)', fontSize: 12, fontWeight: 700 }}>{req.req_number}</td>
-                      <td>{req.dept}</td>
-                      <td>{req.requester}</td>
-                      <td style={{ color: 'var(--ink-3)', fontSize: 12 }}>{req.count} item{req.count !== 1 ? 's' : ''}</td>
-                      <td style={{ fontSize: 12, color: 'var(--ink-4)' }}>{fmtDate(req.paid_at)}</td>
-                      <td className="num strong" style={{ color: 'var(--warn)' }}>{formatNaira(req.total)}</td>
+              <div className="fd-table-wrap">
+                <table className="fd-table">
+                  <thead>
+                    <tr>
+                      <th>Req #</th><th>Department</th><th>Requester</th><th>Items</th><th>Paid</th>
+                      <th className="fd-num">Outstanding</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {stats.outstandingReqs.map((req) => (
+                      <tr key={req.req_number}>
+                        <td style={{ fontSize: 12, fontWeight: 700 }}>{req.req_number}</td>
+                        <td>{req.dept}</td>
+                        <td>{req.requester}</td>
+                        <td className="fd-muted" style={{ fontSize: 12 }}>{req.count} item{req.count !== 1 ? 's' : ''}</td>
+                        <td className="fd-muted" style={{ fontSize: 12 }}>{fmtDate(req.paid_at)}</td>
+                        <td className="fd-num" style={{ fontWeight: 600, color: 'var(--pending-fg)' }}>{formatNaira(req.total)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             )}
           </div>
         </>
       )}
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
-        {/* Pending items for group discussion */}
+      <div className="kit-grid-halves">
+        {/* Pending items for discussion */}
         <div>
-          <div className="section-title">
-            <span className="bar" />
-            Pending for Discussion
-            <span className="count">{pending.length}</span>
-          </div>
+          <h2 style={{ fontSize: 13, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-muted)', marginBottom: 12 }}>
+            Pending for discussion
+            <span style={{ marginLeft: 8, fontSize: 11, background: 'var(--pending-bg)', color: 'var(--pending-fg)', padding: '2px 8px', borderRadius: 999, fontWeight: 700 }}>{pending.length}</span>
+          </h2>
           {pending.length === 0 ? (
-            <div className="card" style={{ padding: 24, textAlign: 'center', color: 'var(--ink-4)', fontSize: 13 }}>
-              No pending items. Queue is clear.
+            <div className="fd-empty">
+              <div className="fd-empty__title">Queue is clear</div>
+              No pending items.
             </div>
           ) : (
-            <div className="signal-feed">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {pending.map((item) => (
-                <div key={item.id} className="signal">
-                  <div className="signal-sev warn" />
-                  <div className="signal-body">
-                    <div className="signal-line">
-                      <span className="signal-title">{item.description}</span>
-                      <span className="signal-tag">{formatNaira(item.amount)}</span>
-                    </div>
-                    <div className="signal-meta">
-                      {item.req_number} · {item.dept} · {item.requester} · {fmtDate(item.created_at)}
-                    </div>
+                <div key={item.id} className="fd-card" style={{ padding: '12px 16px', borderLeft: '3px solid var(--pending-fg)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, marginBottom: 4 }}>
+                    <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-title)' }}>{item.description}</span>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--pending-fg)', flexShrink: 0 }}>{formatNaira(item.amount)}</span>
+                  </div>
+                  <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                    {item.req_number} · {item.dept} · {item.requester} · {fmtDate(item.created_at)}
                   </div>
                 </div>
               ))}
@@ -308,30 +307,27 @@ export default function ViewerClient({ pending, feed, totalPending, stats }: Pro
 
         {/* Recent decisions feed */}
         <div>
-          <div className="section-title">
-            <span className="bar" />
-            Recent Decisions
-            <span className="count">{feed.length}</span>
-          </div>
+          <h2 style={{ fontSize: 13, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-muted)', marginBottom: 12 }}>
+            Recent decisions
+            <span style={{ marginLeft: 8, fontSize: 11, background: 'var(--surface-canvas)', color: 'var(--text-muted)', padding: '2px 8px', borderRadius: 999, fontWeight: 700 }}>{feed.length}</span>
+          </h2>
           {feed.length === 0 ? (
-            <div className="card" style={{ padding: 24, textAlign: 'center', color: 'var(--ink-4)', fontSize: 13 }}>
+            <div className="fd-empty">
+              <div className="fd-empty__title">No decisions yet</div>
               No decisions recorded yet.
             </div>
           ) : (
-            <div className="signal-feed">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {feed.map((entry) => {
-                const sev = getSeverity(entry.action)
+                const badge = getActionBadge(entry.action)
                 return (
-                  <div key={entry.id} className="signal">
-                    <div className={`signal-sev ${sev}`} />
-                    <div className="signal-body">
-                      <div className="signal-line">
-                        <span className="signal-title">{entry.action}</span>
-                        <span className="signal-tag">{timeAgo(entry.created_at)}</span>
-                      </div>
-                      <div className="signal-meta">
-                        {entry.actor_name}{entry.detail ? ` · ${entry.detail}` : ''}
-                      </div>
+                  <div key={entry.id} className="fd-card" style={{ padding: '12px 16px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, marginBottom: 4 }}>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-title)' }}>{entry.action}</span>
+                      <span style={{ fontSize: 11, color: 'var(--text-muted)', flexShrink: 0 }}>{timeAgo(entry.created_at)}</span>
+                    </div>
+                    <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                      {entry.actor_name}{entry.detail ? ` · ${entry.detail}` : ''}
                     </div>
                   </div>
                 )
@@ -340,16 +336,6 @@ export default function ViewerClient({ pending, feed, totalPending, stats }: Pro
           )}
         </div>
       </div>
-    </div>
-  )
-}
-
-function StatCard({ label, value, sub, color }: { label: string; value: string; sub: string; color: string }) {
-  return (
-    <div className="card" style={{ padding: '16px 20px' }}>
-      <div style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--ink-4)', marginBottom: 6 }}>{label}</div>
-      <div style={{ fontSize: 22, fontWeight: 800, color, letterSpacing: '-0.02em', fontVariantNumeric: 'tabular-nums' }}>{value}</div>
-      <div style={{ fontSize: 11, color: 'var(--ink-4)', marginTop: 3 }}>{sub}</div>
     </div>
   )
 }

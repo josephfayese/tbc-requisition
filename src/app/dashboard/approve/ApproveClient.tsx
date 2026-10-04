@@ -86,7 +86,7 @@ export default function ApproveClient({ items, canApprove }: { items: Item[]; ca
           {Object.values(grouped).map((group) => {
             const groupTotal = group.items.reduce((s, i) => s + i.amount, 0)
             return (
-              <div key={group.req_number} className="fd-card" style={{ overflow: 'hidden' }}>
+              <div key={group.req_number} className="fd-card fd-card--flush">
                 <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--border-divider)', background: 'var(--bg-tint)' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
                     <div>

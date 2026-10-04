@@ -46,56 +46,56 @@ export default function InviteUserForm({ departments }: { departments: string[] 
   return (
     <>
       {tempPassword && (
-        <div style={{ marginBottom: 20, padding: '16px 18px', borderRadius: 10, background: 'var(--pos-soft)', border: '1px solid rgba(22,163,74,0.3)' }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--pos)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>
-            ✓ Account created for {createdName}
+        <div className="fd-notice fd-notice--success" style={{ marginBottom: 20 }}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--approved-fg)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>
+            Account created for {createdName}
           </div>
-          <div style={{ fontSize: 13, color: 'var(--ink-2)', marginBottom: 10 }}>
+          <div style={{ fontSize: 13, color: 'var(--text-body)', marginBottom: 10 }}>
             Share this temporary password with the user. They must change it on first login.
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <code style={{ fontSize: 18, fontWeight: 800, letterSpacing: '0.12em', color: 'var(--ink)', background: 'var(--bg)', border: '1px solid var(--line)', borderRadius: 7, padding: '8px 14px', fontFamily: 'var(--mono)' }}>
+            <code style={{ fontSize: 18, fontWeight: 800, letterSpacing: '0.12em', color: 'var(--text-title)', background: 'var(--surface-card)', border: '1px solid var(--border-default)', borderRadius: 7, padding: '8px 14px' }}>
               {tempPassword}
             </code>
             <button
+              className="fd-btn fd-btn--secondary fd-btn--sm"
               onClick={() => { navigator.clipboard.writeText(tempPassword); toast('Copied!', 'success') }}
-              style={{ padding: '8px 12px', borderRadius: 7, border: '1px solid var(--line)', background: 'var(--bg)', cursor: 'pointer', fontSize: 12, fontWeight: 600, color: 'var(--ink-3)' }}
             >
               Copy
             </button>
           </div>
-          <div style={{ fontSize: 11, color: 'var(--ink-4)', marginTop: 10 }}>
+          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 10 }}>
             This password will not be shown again. Store it safely before dismissing.
           </div>
           <button
             onClick={() => setTempPassword(null)}
-            style={{ marginTop: 12, fontSize: 12, color: 'var(--ink-3)', background: 'none', border: 'none', cursor: 'pointer', padding: 0, textDecoration: 'underline' }}
+            style={{ marginTop: 12, fontSize: 12, color: 'var(--text-secondary)', background: 'none', border: 'none', cursor: 'pointer', padding: 0, textDecoration: 'underline' }}
           >
             Dismiss
           </button>
         </div>
       )}
 
-      <form onSubmit={handleSubmit} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-        <div>
-          <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--ink-3)', marginBottom: 6 }}>Full Name *</label>
-          <input className="li-input" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Florence Adeyemi" required />
+      <form onSubmit={handleSubmit} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16 }}>
+        <div className="fd-field">
+          <label className="fd-field__label">Full name *</label>
+          <input className="fd-input" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Florence Adeyemi" required />
         </div>
-        <div>
-          <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--ink-3)', marginBottom: 6 }}>Email *</label>
-          <input className="li-input" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="florence@tbcoutotzion.org" required />
+        <div className="fd-field">
+          <label className="fd-field__label">Email *</label>
+          <input className="fd-input" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="florence@tbcoutotzion.org" required />
         </div>
-        <div>
-          <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--ink-3)', marginBottom: 6 }}>Role *</label>
-          <select className="li-input" value={role} onChange={(e) => setRole(e.target.value)} required>
+        <div className="fd-field">
+          <label className="fd-field__label">Role *</label>
+          <select className="fd-input fd-select" value={role} onChange={(e) => setRole(e.target.value)} required>
             {ROLES.map((r) => (
               <option key={r.value} value={r.value}>{r.label}</option>
             ))}
           </select>
         </div>
-        <div>
-          <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--ink-3)', marginBottom: 6 }}>Department</label>
-          <select className="li-input" value={dept} onChange={(e) => setDept(e.target.value)}>
+        <div className="fd-field">
+          <label className="fd-field__label">Department</label>
+          <select className="fd-input fd-select" value={dept} onChange={(e) => setDept(e.target.value)}>
             <option value="">— None —</option>
             {departments.map((d) => (
               <option key={d} value={d}>{d}</option>
@@ -105,10 +105,10 @@ export default function InviteUserForm({ departments }: { departments: string[] 
         <div style={{ gridColumn: '1 / -1', display: 'flex', justifyContent: 'flex-end', gap: 12, marginTop: 4 }}>
           <button
             type="submit"
-            className="pri-btn"
+            className="fd-btn fd-btn--primary"
             disabled={isPending || !name.trim() || !email.trim()}
           >
-            {isPending ? 'Creating account…' : '+ Create Account'}
+            {isPending ? 'Creating account...' : 'Create account'}
           </button>
         </div>
       </form>
