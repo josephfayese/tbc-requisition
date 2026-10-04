@@ -86,117 +86,92 @@ export default function ApproveClient({ items, canApprove }: { items: Item[]; ca
           {Object.values(grouped).map((group) => {
             const groupTotal = group.items.reduce((s, i) => s + i.amount, 0)
             return (
-              <div key={group.req_number} className="fd-card fd-card--flush">
-                <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--border-divider)', background: 'var(--bg-tint)' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-                    <div>
-                      <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-body)', fontFamily: 'var(--mono)' }}>{group.req_number}</div>
+              <div key={group.req_number} className="fd-card" style={{ padding: 0, overflow: 'hidden' }}>
+                <div style={{ padding: '14px 16px', borderBottom: '1px solid var(--border-divider)', background: 'var(--surface-sunken)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' }}>
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-body)' }}>{group.req_number}</div>
                       <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
-                        {group.dept} · by {group.requester} · {fmtDate(group.req_created_at)}
+                        {group.dept} · {group.requester} · {fmtDate(group.req_created_at)}
                       </div>
                     </div>
-                    <div style={{ marginLeft: 'auto', fontSize: 13, fontWeight: 700, color: 'var(--text-body)', fontVariantNumeric: 'tabular-nums' }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-body)', fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}>
                       {formatNaira(groupTotal)}
                     </div>
                   </div>
                   {group.notes && (
                     <div style={{ marginTop: 8, fontSize: 12, color: 'var(--text-muted)', background: 'var(--surface-card)', border: '1px solid var(--border-divider)', borderRadius: 6, padding: '6px 10px' }}>
-                      <span style={{ fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', fontSize: 10, letterSpacing: '0.08em' }}>Justification: </span>
+                      <span style={{ fontWeight: 600, textTransform: 'uppercase', fontSize: 10, letterSpacing: '0.08em' }}>Justification: </span>
                       {group.notes}
                     </div>
                   )}
                 </div>
-                <div className="fd-table-wrap">
-                <table className="fd-table">
-                  <thead>
-                    <tr>
-                      <th>Description</th>
-                      <th style={{ textAlign: 'center' }}>Qty</th>
-                      <th style={{ textAlign: 'right' }}>Unit Price</th>
-                      <th style={{ textAlign: 'right' }}>Total</th>
-                      {canApprove && <th style={{ textAlign: 'right', width: 180 }}>Decision</th>}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {group.items.map((item) => (
-                      <tr key={item.id}>
-                        <td style={{ fontWeight: 600 }}>
-                          {item.description}
-                          {item.resubmission_note && (
-                            <div style={{ marginTop: 4, fontSize: 11, color: 'var(--green-700)', background: 'var(--approved-bg)', border: '1px solid rgba(30,105,52,.18)', borderRadius: 4, padding: '4px 8px' }}>
-                              <span style={{ fontWeight: 700, textTransform: 'uppercase', fontSize: 10, letterSpacing: '0.06em' }}>Resubmission note: </span>
-                              {item.resubmission_note}
-                            </div>
-                          )}
-                        </td>
-                        <td style={{ textAlign: 'center', color: 'var(--text-muted)' }}>{item.qty}</td>
-                        <td className="fd-num" style={{ color: 'var(--text-muted)' }}>{item.unit_price ? formatNaira(item.unit_price) : '—'}</td>
-                        <td className="fd-num" style={{ fontWeight: 600 }}>{formatNaira(item.amount)}</td>
-                        {canApprove && (
-                          <td>
-                            <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
-                              <button className="fd-btn fd-btn--danger fd-btn--sm" disabled={pendingId === item.id} onClick={() => setRejectTarget({ id: item.id, description: item.description })}>✕ Reject</button>
-                              <button className="fd-btn fd-btn--primary fd-btn--sm" disabled={pendingId === item.id} onClick={() => handleApprove(item.id, item.description)}>
-                                {pendingId === item.id ? '…' : '✓ Approve'}
-                              </button>
-                            </div>
-                          </td>
-                        )}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                  {group.items.map((item, idx) => (
+                    <div key={item.id} style={{ padding: '12px 16px', borderTop: idx > 0 ? '1px solid var(--border-divider)' : 'none' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
+                        <div style={{ minWidth: 0, flex: 1 }}>
+                          <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-body)' }}>{item.description}</div>
+                          <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>
+                            Qty {item.qty}{item.unit_price ? ` × ${formatNaira(item.unit_price)}` : ''}
+                          </div>
+                        </div>
+                        <div style={{ fontSize: 14, fontWeight: 700, fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}>
+                          {formatNaira(item.amount)}
+                        </div>
+                      </div>
+                      {item.resubmission_note && (
+                        <div style={{ marginTop: 6, fontSize: 11, color: 'var(--green-700)', background: 'var(--approved-bg)', border: '1px solid rgba(30,105,52,.18)', borderRadius: 4, padding: '4px 8px' }}>
+                          <span style={{ fontWeight: 700, textTransform: 'uppercase', fontSize: 10, letterSpacing: '0.06em' }}>Resubmission note: </span>
+                          {item.resubmission_note}
+                        </div>
+                      )}
+                      {canApprove && (
+                        <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+                          <button className="fd-btn fd-btn--danger fd-btn--sm" style={{ flex: 1 }} disabled={pendingId === item.id} onClick={() => setRejectTarget({ id: item.id, description: item.description })}>✕ Reject</button>
+                          <button className="fd-btn fd-btn--primary fd-btn--sm" style={{ flex: 1 }} disabled={pendingId === item.id} onClick={() => handleApprove(item.id, item.description)}>
+                            {pendingId === item.id ? '…' : '✓ Approve'}
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  ))}
                 </div>
               </div>
             )
           })}
         </div>
       ) : (
-        <div className="fd-card fd-card--flush">
-          <div className="fd-card__head">
-            <span className="fd-card__title">All pending items</span>
-            <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{items.length} items · {formatNaira(items.reduce((s, i) => s + i.amount, 0))} total</span>
-          </div>
-          <div className="fd-table-wrap">
-          <table className="fd-table">
-            <thead>
-              <tr>
-                <th>Req #</th><th>Description</th><th>Dept</th><th>By</th>
-                <th style={{ textAlign: 'right' }}>Amount</th>
-                {canApprove && <th style={{ textAlign: 'right', width: 180 }}>Decision</th>}
-              </tr>
-            </thead>
-            <tbody>
-              {items.map((item) => (
-                <tr key={item.id}>
-                  <td style={{ fontFamily: 'var(--mono)', fontSize: 12 }}>{item.req_number}</td>
-                  <td style={{ fontWeight: 600 }}>
-                    {item.description}
-                    {item.resubmission_note && (
-                      <div style={{ marginTop: 4, fontSize: 11, color: 'var(--green-700)', background: 'var(--approved-bg)', border: '1px solid rgba(30,105,52,.18)', borderRadius: 4, padding: '4px 8px' }}>
-                        <span style={{ fontWeight: 700, textTransform: 'uppercase', fontSize: 10, letterSpacing: '0.06em' }}>Resubmission note: </span>
-                        {item.resubmission_note}
-                      </div>
-                    )}
-                  </td>
-                  <td>{item.dept}</td>
-                  <td style={{ fontSize: 12, color: 'var(--text-muted)' }}>{item.requester}</td>
-                  <td className="fd-num">{formatNaira(item.amount)}</td>
-                  {canApprove && (
-                    <td>
-                      <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
-                        <button className="fd-btn fd-btn--danger fd-btn--sm" disabled={pendingId === item.id} onClick={() => setRejectTarget({ id: item.id, description: item.description })}>✕ Reject</button>
-                        <button className="fd-btn fd-btn--primary fd-btn--sm" disabled={pendingId === item.id} onClick={() => handleApprove(item.id, item.description)}>
-                          {pendingId === item.id ? '…' : '✓ Approve'}
-                        </button>
-                      </div>
-                    </td>
-                  )}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {items.map((item) => (
+            <div key={item.id} className="fd-card" style={{ padding: '14px 16px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  <div style={{ fontSize: 14, fontWeight: 600 }}>{item.description}</div>
+                  <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>
+                    {item.req_number} · {item.dept} · {item.requester}
+                  </div>
+                </div>
+                <div style={{ fontSize: 14, fontWeight: 700, fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}>
+                  {formatNaira(item.amount)}
+                </div>
+              </div>
+              {item.resubmission_note && (
+                <div style={{ marginTop: 6, fontSize: 11, color: 'var(--green-700)', background: 'var(--approved-bg)', border: '1px solid rgba(30,105,52,.18)', borderRadius: 4, padding: '4px 8px' }}>
+                  <span style={{ fontWeight: 700, textTransform: 'uppercase', fontSize: 10, letterSpacing: '0.06em' }}>Resubmission note: </span>
+                  {item.resubmission_note}
+                </div>
+              )}
+              {canApprove && (
+                <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+                  <button className="fd-btn fd-btn--danger fd-btn--sm" style={{ flex: 1 }} disabled={pendingId === item.id} onClick={() => setRejectTarget({ id: item.id, description: item.description })}>✕ Reject</button>
+                  <button className="fd-btn fd-btn--primary fd-btn--sm" style={{ flex: 1 }} disabled={pendingId === item.id} onClick={() => handleApprove(item.id, item.description)}>
+                    {pendingId === item.id ? '…' : '✓ Approve'}
+                  </button>
+                </div>
+              )}
+            </div>
+          ))}
         </div>
       )}
 
