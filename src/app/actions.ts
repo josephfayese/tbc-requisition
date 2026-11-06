@@ -4,6 +4,8 @@ import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { formatNaira, isSubmissionWindowOpen, submissionWindowMessage } from '@/lib/utils'
+import { rateLimit } from '@/lib/rate-limit'
+import { headers } from 'next/headers'
 import { Resend } from 'resend'
 
 const FROM = 'TBC Finance <noreply@tbcooz-finance.com>'
@@ -741,6 +743,11 @@ export async function markNotificationsRead() {
 // ─── Verify viewer passcode ───────────────────────────────────────────────────
 
 export async function verifyViewerPasscode(input: string): Promise<{ ok: boolean }> {
+  const hdrs = await headers()
+  const ip = hdrs.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown'
+  const limited = rateLimit(`viewer:${ip}`, { maxAttempts: 10, windowMs: 15 * 60 * 1000 })
+  if (limited) return { ok: false }
+
   const supabase = await createClient()
 
   const [{ data: openSetting }, { data: passcodeSetting }] = await Promise.all([
@@ -857,6 +864,11 @@ export async function signUpUser(
 // ─── Login ────────────────────────────────────────────────────────────────────
 
 export async function loginWithEmail(email: string, password: string) {
+  const hdrs = await headers()
+  const ip = hdrs.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown'
+  const limited = rateLimit(`login:${ip}`, { maxAttempts: 5, windowMs: 15 * 60 * 1000 })
+  if (limited) return { error: limited, mustChangePassword: false }
+
   const supabase = await createClient()
   const { data, error } = await supabase.auth.signInWithPassword({ email, password })
   if (error) return { error: error.message, mustChangePassword: false }
@@ -877,11 +889,72 @@ export async function logout() {
   revalidatePath('/', 'layout')
 }
 
+// ─── Update user (admin only) ────────────────────────────────────────────────
+
+export async function updateUser(userId: string, role: string, dept: string | null) {
+  const { error, profile, supabase } = await getActorProfile()
+  if (error || !profile || !supabase) return { error: error ?? 'Auth error' }
+  if (profile.role !== 'admin') return { error: 'Only Admin can update users' }
+
+  const validRoles = ['hod', 'dg', 'backup', 'finance', 'pastor', 'chima', 'admin']
+  if (!validRoles.includes(role)) return { error: 'Invalid role' }
+  if (role === 'hod' && !dept?.trim()) return { error: 'Department is required for HoD role' }
+
+  const admin = createAdminClient()
+  const { error: upErr } = await admin
+    .from('profiles')
+    .update({ role, dept: dept?.trim() || null })
+    .eq('id', userId)
+  if (upErr) return { error: upErr.message }
+
+  await supabase.from('audit_log').insert({
+    actor_id: profile.id,
+    actor_name: profile.name,
+    action: `Updated user role/dept`,
+    detail: `User ID: ${userId} · Role: ${role}${dept ? ` · Dept: ${dept.trim()}` : ''}`,
+  })
+
+  revalidatePath('/dashboard/admin')
+  revalidatePath('/dashboard/audit')
+  return { error: null }
+}
+
+// ─── Admin reset password ────────────────────────────────────────────────────
+
+export async function adminResetPassword(userId: string) {
+  const { error, profile, supabase } = await getActorProfile()
+  if (error || !profile || !supabase) return { error: error ?? 'Auth error' }
+  if (profile.role !== 'admin') return { error: 'Only Admin can reset passwords' }
+
+  const tempPassword = Math.random().toString(36).slice(-8).toUpperCase() + Math.floor(Math.random() * 900 + 100)
+
+  const admin = createAdminClient()
+  const { error: pwErr } = await admin.auth.admin.updateUserById(userId, { password: tempPassword })
+  if (pwErr) return { error: pwErr.message }
+
+  // Set must_change_password so user is forced to change on next login
+  await admin.from('profiles').update({ must_change_password: true }).eq('id', userId)
+
+  await supabase.from('audit_log').insert({
+    actor_id: profile.id,
+    actor_name: profile.name,
+    action: `Reset password for user`,
+    detail: `User ID: ${userId}`,
+  })
+
+  revalidatePath('/dashboard/admin')
+  revalidatePath('/dashboard/audit')
+  return { error: null, tempPassword }
+}
+
 // ─── Change password (first login) ───────────────────────────────────────────
 
 export async function changePassword(newPassword: string) {
   if (!newPassword || newPassword.length < 8) {
     return { error: 'Password must be at least 8 characters' }
+  }
+  if (!/[a-zA-Z]/.test(newPassword) || !/\d/.test(newPassword)) {
+    return { error: 'Password must include at least one letter and one number' }
   }
 
   const supabase = await createClient()

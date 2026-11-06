@@ -1,15 +1,20 @@
+import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+
+export const metadata: Metadata = { title: 'Users & Roles' }
 import { fmtDate } from '@/lib/utils'
-import StatusPill from '@/components/StatusPill'
 import InviteUserForm from './InviteUserForm'
+import UserRow from './UserRow'
 
 const ROLE_LABELS: Record<string, string> = {
   hod: 'Head of Department',
-  dg: 'DG — Dr. Ngozi Eze',
-  backup: 'Backup — Tunde Bakare',
-  chima: 'Chima Nwosu',
+  dg: 'Director General',
+  backup: 'Backup Approver',
+  finance: 'Head of Finance',
+  pastor: 'Senior Pastor',
+  chima: 'Payment Executor',
   admin: 'Administrator',
 }
 
@@ -29,80 +34,70 @@ export default async function AdminPage() {
 
   const users = profiles ?? []
 
-  // Use admin client so departments load regardless of RLS policies
   const { data: depts } = await admin.from('departments').select('name').order('name')
 
   return (
-    <div className="page" style={{ maxWidth: 900 }}>
-      <div className="masthead" style={{ marginBottom: 28 }}>
+    <div>
+      <div className="fd-pagehead">
         <div>
-          <div className="masthead-eyebrow"><span className="bar" />Administration</div>
-          <h1>Users <em>&amp; Roles</em></h1>
-          <p className="masthead-sub">{users.length} registered user{users.length !== 1 ? 's' : ''}. Invite new members and manage roles.</p>
+          <h1 className="fd-pagehead__title">Users &amp; roles</h1>
+          <p className="fd-pagehead__sub">{users.length} registered user{users.length !== 1 ? 's' : ''}. Invite new members and manage roles.</p>
         </div>
       </div>
 
       {/* Users table */}
-      <div className="table-wrap" style={{ marginBottom: 28 }}>
-        <div className="table-head">
-          <span className="card-title">Team Members</span>
-          <span style={{ fontSize: 12, color: 'var(--ink-4)' }}>{users.length} total</span>
+      <div className="fd-card fd-card--flush" style={{ marginBottom: 28 }}>
+        <div className="fd-card__head">
+          <span className="fd-card__title">Team members</span>
+          <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{users.length} total</span>
         </div>
-        <table className="tbl">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Email</th>
-              <th>Role</th>
-              <th>Department</th>
-              <th>Joined</th>
-            </tr>
-          </thead>
-          <tbody>
-            {users.map((u) => (
-              <tr key={u.id}>
-                <td className="strong">
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <div className="avatar" style={{ width: 28, height: 28, fontSize: 10 }}>
-                      {u.name.split(' ').map((w: string) => w[0]).slice(0, 2).join('').toUpperCase()}
-                    </div>
-                    {u.name}
-                  </div>
-                </td>
-                <td style={{ color: 'var(--ink-3)', fontSize: 13 }}>{u.email}</td>
-                <td>
-                  <RolePill role={u.role} />
-                </td>
-                <td style={{ color: 'var(--ink-3)' }}>{u.dept ?? '—'}</td>
-                <td style={{ color: 'var(--ink-4)', fontSize: 12 }}>{fmtDate(u.created_at)}</td>
-              </tr>
-            ))}
-            {users.length === 0 && (
+        <div className="fd-table-wrap">
+          <table className="fd-table">
+            <thead>
               <tr>
-                <td colSpan={5} style={{ textAlign: 'center', color: 'var(--ink-4)', padding: 32 }}>No users found.</td>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Department</th>
+                <th>Joined</th>
+                <th>Actions</th>
               </tr>
-            )}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {users.map((u) => (
+                <UserRow
+                  key={u.id}
+                  user={u}
+                  departments={(depts ?? []).map((d) => d.name)}
+                  fmtDate={fmtDate}
+                  currentUserId={user!.id}
+                />
+              ))}
+              {users.length === 0 && (
+                <tr>
+                  <td colSpan={6} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: 32 }}>No users found.</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* Invite form */}
       {isAdmin && (
-        <div className="card" style={{ padding: 28 }}>
-          <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--ink)', marginBottom: 20 }}>Invite New User</div>
+        <div className="fd-card" style={{ padding: 28 }}>
+          <div className="fd-card__title" style={{ marginBottom: 20 }}>Invite new user</div>
           <InviteUserForm departments={(depts ?? []).map((d) => d.name)} />
         </div>
       )}
 
       {/* Role reference */}
-      <div className="section-title" style={{ marginTop: 32 }}>
-        <span className="bar" />Role Descriptions
-      </div>
+      <h2 style={{ fontSize: 13, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-muted)', marginTop: 32, marginBottom: 12 }}>Role descriptions</h2>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
         {Object.entries(ROLE_LABELS).map(([role, label]) => (
-          <div key={role} className="card" style={{ padding: '14px 16px' }}>
-            <RolePill role={role} />
-            <div style={{ fontSize: 12, color: 'var(--ink-3)', marginTop: 8 }}>{label}</div>
+          <div key={role} className="fd-card" style={{ padding: '14px 16px' }}>
+            <RoleBadge role={role} />
+            <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 8 }}>{label}</div>
           </div>
         ))}
       </div>
@@ -110,17 +105,19 @@ export default async function AdminPage() {
   )
 }
 
-function RolePill({ role }: { role: string }) {
+function RoleBadge({ role }: { role: string }) {
   const map: Record<string, string> = {
-    hod: 'neutral',
-    dg: 'info',
-    backup: 'warn',
-    chima: 'pos',
-    admin: 'neg',
+    hod: 'fd-badge--retired',
+    dg: 'fd-badge--paid',
+    backup: 'fd-badge--pending',
+    finance: 'fd-badge--paid',
+    pastor: 'fd-badge--approved',
+    chima: 'fd-badge--approved',
+    admin: 'fd-badge--rejected',
   }
   return (
-    <span className={`pill ${map[role] ?? 'neutral'}`} style={{ textTransform: 'capitalize' }}>
-      {role}
+    <span className={`fd-badge ${map[role] ?? 'fd-badge--retired'}`} style={{ textTransform: 'capitalize' }}>
+      <span className="fd-badge__dot" />{role}
     </span>
   )
 }
