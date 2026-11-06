@@ -106,26 +106,24 @@ export default function NewReqForm({ departments, defaultDept }: { departments: 
   return (
     <form onSubmit={handleSubmit}>
       {/* Department */}
-      <div className="card" style={{ padding: '20px 24px', marginBottom: 16 }}>
-        <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--ink-3)', marginBottom: 8 }}>
-          Department
-        </label>
-        <select className="li-input" value={dept} onChange={(e) => setDept(e.target.value)} required style={{ maxWidth: 280 }}>
-          {departments.map((d) => <option key={d} value={d}>{d}</option>)}
-        </select>
+      <div className="fd-card" style={{ marginBottom: 16 }}>
+        <div className="fd-field">
+          <label className="fd-field__label">Department</label>
+          <select className="fd-input fd-select" value={dept} onChange={(e) => setDept(e.target.value)} required style={{ maxWidth: 280 }}>
+            {departments.map((d) => <option key={d} value={d}>{d}</option>)}
+          </select>
+        </div>
       </div>
 
       {/* Bank account details */}
-      <div className="card" style={{ padding: '20px 24px', marginBottom: 16 }}>
-        <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--ink-3)', marginBottom: 4 }}>
-          Bank Account Details
-        </label>
-        <p style={{ fontSize: 12, color: 'var(--ink-4)', margin: '0 0 12px' }}>
-          Account the payment should be made into. Required.
-        </p>
+      <div className="fd-card" style={{ marginBottom: 16 }}>
+        <div className="fd-field" style={{ marginBottom: 12 }}>
+          <label className="fd-field__label">Bank account details</label>
+          <span className="fd-field__help">Account the payment should be made into. Required.</span>
+        </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 10 }}>
           <input
-            className="li-input"
+            className="fd-input"
             placeholder="Bank name"
             value={bankName}
             onChange={(e) => setBankName(e.target.value)}
@@ -133,7 +131,7 @@ export default function NewReqForm({ departments, defaultDept }: { departments: 
             required
           />
           <input
-            className="li-input"
+            className="fd-input"
             placeholder="Account number"
             value={accountNumber}
             onChange={(e) => setAccountNumber(e.target.value.replace(/[^\d]/g, ''))}
@@ -142,7 +140,7 @@ export default function NewReqForm({ departments, defaultDept }: { departments: 
             required
           />
           <input
-            className="li-input"
+            className="fd-input"
             placeholder="Account name"
             value={accountName}
             onChange={(e) => setAccountName(e.target.value)}
@@ -153,30 +151,30 @@ export default function NewReqForm({ departments, defaultDept }: { departments: 
       </div>
 
       {/* Line items */}
-      <div className="card" style={{ marginBottom: 16, overflow: 'hidden' }}>
-        <div className="table-head">
-          <span className="card-title">Line Items</span>
-          <span style={{ fontSize: 12, color: 'var(--ink-4)' }}>
-            {items.length} item{items.length !== 1 ? 's' : ''} · <strong style={{ color: 'var(--ink-2)' }}>{formatNaira(total)}</strong>
+      <div className="fd-card fd-card--flush" style={{ marginBottom: 16 }}>
+        <div className="fd-card__head" style={{ padding: '16px 20px 0' }}>
+          <h2 className="fd-card__title">Line items</h2>
+          <span style={{ fontSize: 'var(--type-footnote-size)', color: 'var(--text-muted)' }}>
+            {items.length} item{items.length !== 1 ? 's' : ''} · <strong style={{ color: 'var(--text-body)' }}>{formatNaira(total)}</strong>
           </span>
         </div>
 
-        <div style={{ padding: '8px 16px 0' }}>
+        <div style={{ padding: '8px 20px 0' }}>
           {/* Header */}
           <div className="li-grid li-grid-head">
             <div>Description</div>
             <div style={{ textAlign: 'center' }}>Qty</div>
-            <div style={{ textAlign: 'right' }}>Unit Price (₦)</div>
+            <div style={{ textAlign: 'right' }}>Unit price (NGN)</div>
             <div style={{ textAlign: 'right' }}>Total</div>
             <div />
           </div>
 
           {items.map((item, idx) => (
-            <div key={item.id} style={{ borderBottom: '1px solid var(--line)', padding: '10px 0' }}>
+            <div key={item.id} style={{ borderBottom: '1px solid var(--border-divider)', padding: '10px 0' }}>
               {/* Main row */}
               <div className="li-grid" style={{ alignItems: 'center' }}>
                 <input
-                  className="li-input"
+                  className="fd-input"
                   placeholder={`Item ${idx + 1}`}
                   value={item.description}
                   onChange={(e) => updateItem(item.id, 'description', e.target.value)}
@@ -184,7 +182,7 @@ export default function NewReqForm({ departments, defaultDept }: { departments: 
                   required
                 />
                 <input
-                  className="li-input"
+                  className="fd-input"
                   type="number"
                   min="1"
                   step="1"
@@ -195,55 +193,54 @@ export default function NewReqForm({ departments, defaultDept }: { departments: 
                   required
                 />
                 <input
-                  className="li-input"
+                  className="fd-input fd-input--num"
                   type="number"
                   min="0.01"
                   step="0.01"
                   placeholder="0.00"
                   value={item.unitPrice}
                   onChange={(e) => updateItem(item.id, 'unitPrice', e.target.value)}
-                  style={{ textAlign: 'right' }}
                   required
                 />
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', fontSize: 13, fontWeight: 600, color: 'var(--ink)', fontVariantNumeric: 'tabular-nums', padding: '0 4px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', fontSize: 'var(--type-body-size)', fontWeight: 600, color: 'var(--text-body)', fontVariantNumeric: 'tabular-nums', padding: '0 4px' }}>
                   {itemTotal(item) > 0 ? formatNaira(itemTotal(item)) : '—'}
                 </div>
                 <button
                   type="button"
-                  className="x-btn"
+                  className="fd-iconbtn"
                   onClick={() => removeItem(item.id)}
                   disabled={items.length === 1}
                   style={{ opacity: items.length === 1 ? 0.3 : 1 }}
                   aria-label="Remove item"
-                >✕</button>
+                >&#x2715;</button>
               </div>
 
               {/* Per-item justification + attachment */}
               <div style={{ display: 'flex', gap: 8, marginTop: 8, flexWrap: 'wrap', alignItems: 'flex-start' }}>
                 <div style={{ flex: 1, minWidth: 200 }}>
                   <input
-                    className="li-input"
+                    className="fd-input"
                     placeholder="Justification for this item (required)"
                     value={item.justification}
                     onChange={(e) => updateItem(item.id, 'justification', e.target.value)}
-                    style={{ fontSize: 12 }}
+                    style={{ fontSize: 'var(--type-footnote-size)' }}
                     required
                   />
                 </div>
                 <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
                   <button
                     type="button"
-                    className="ghost-btn"
-                    style={{ fontSize: 11, padding: '6px 10px' }}
+                    className="fd-btn fd-btn--ghost fd-btn--sm"
+                    style={{ fontSize: 'var(--type-caption-size)' }}
                     onClick={() => fileRefs.current[item.id]?.click()}
                   >
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
-                    {item.file ? item.file.name.slice(0, 20) + (item.file.name.length > 20 ? '…' : '') : 'Attach'}
+                    {item.file ? item.file.name.slice(0, 20) + (item.file.name.length > 20 ? '...' : '') : 'Attach'}
                   </button>
                   {item.file && (
                     <button
                       type="button"
-                      className="x-btn"
+                      className="fd-iconbtn"
                       style={{ width: 26, height: 26, fontSize: 10 }}
                       onClick={() => {
                         setItemFile(item.id, null)
@@ -251,7 +248,7 @@ export default function NewReqForm({ departments, defaultDept }: { departments: 
                         if (ref) ref.value = ''
                       }}
                       aria-label="Remove attachment"
-                    >✕</button>
+                    >&#x2715;</button>
                   )}
                   <input
                     ref={(el) => { fileRefs.current[item.id] = el }}
@@ -266,16 +263,16 @@ export default function NewReqForm({ departments, defaultDept }: { departments: 
           ))}
 
           <div style={{ padding: '12px 0' }}>
-            <button type="button" className="ghost-btn" onClick={addItem}>
+            <button type="button" className="fd-btn fd-btn--ghost" onClick={addItem}>
               <span>+</span> Add line item
             </button>
           </div>
         </div>
 
         {/* Total */}
-        <div style={{ borderTop: '1px solid var(--line)', padding: '14px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-tint)' }}>
-          <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink-3)' }}>Total</span>
-          <span style={{ fontSize: 18, fontWeight: 800, color: 'var(--ink)', fontVariantNumeric: 'tabular-nums' }}>{formatNaira(total)}</span>
+        <div style={{ borderTop: '1px solid var(--border-divider)', padding: '14px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--surface-sunken)' }}>
+          <span style={{ fontSize: 'var(--type-body-size)', fontWeight: 600, color: 'var(--text-muted)' }}>Total</span>
+          <span style={{ fontSize: 'var(--type-title1-size)', fontWeight: 800, color: 'var(--text-title)', fontVariantNumeric: 'tabular-nums' }}>{formatNaira(total)}</span>
         </div>
       </div>
 
@@ -283,7 +280,7 @@ export default function NewReqForm({ departments, defaultDept }: { departments: 
       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12 }}>
         <button
           type="button"
-          className="ghost-btn"
+          className="fd-btn fd-btn--ghost"
           onClick={() => {
             nextId.current = 2
             setItems([{ id: 1, description: '', qty: '1', unitPrice: '', justification: '', file: null }])
@@ -295,8 +292,8 @@ export default function NewReqForm({ departments, defaultDept }: { departments: 
         >
           Reset
         </button>
-        <button type="submit" className="pri-btn" disabled={isPending || items.every((i) => !i.description)}>
-          {isPending ? 'Submitting…' : 'Submit Requisition'}
+        <button type="submit" className="fd-btn fd-btn--primary" disabled={isPending || items.every((i) => !i.description)}>
+          {isPending ? 'Submitting...' : 'Submit requisition'}
         </button>
       </div>
     </form>

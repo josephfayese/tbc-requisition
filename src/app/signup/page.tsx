@@ -6,7 +6,6 @@ export const dynamic = 'force-dynamic'
 export default async function SignupPage() {
   const admin = createAdminClient()
 
-  // Check if any admin account already exists
   const { count: adminCount } = await admin
     .from('profiles')
     .select('*', { count: 'exact', head: true })
@@ -14,58 +13,60 @@ export default async function SignupPage() {
 
   const adminExists = (adminCount ?? 0) > 0
 
-  // Fetch departments for the form
   const { data: deptRows } = await admin.from('departments').select('name').order('name')
   const departments = (deptRows ?? []).map((d: { name: string }) => d.name)
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg)', padding: 20 }}>
-      <div style={{ width: '100%', maxWidth: 420 }}>
-        {/* Brand */}
-        <div style={{ textAlign: 'center', marginBottom: 28 }}>
+    <div className="kit-auth">
+      {/* Brand panel */}
+      <div className="kit-auth__quote">
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', padding: 40 }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo-wordmark.jpg" alt="Out of Zion — The Baptizing Church" style={{ width: 220, maxWidth: '80%', margin: '0 auto 16px', display: 'block' }} />
-          <div style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.12em', color: 'var(--ink-4)', marginBottom: 6 }}>
+          <img src="/logo-wordmark.jpg" alt="Out of Zion — The Baptizing Church" style={{ width: 200, maxWidth: '80%', marginBottom: 24, borderRadius: 8 }} />
+          <div style={{ fontSize: 12, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.12em', color: 'var(--cream-300)', marginBottom: 8 }}>
             TBC OutOfZion
           </div>
-          <h1 style={{ fontSize: 24, fontWeight: 800, color: 'var(--ink)', margin: 0, letterSpacing: '-0.02em' }}>
-            {adminExists ? 'Access Restricted' : 'Create your account'}
-          </h1>
-          <p style={{ fontSize: 13, color: 'var(--ink-3)', marginTop: 8 }}>
-            Finance Requisitions · Internal access only
-          </p>
+          <div style={{ fontSize: 13, color: 'var(--cream-200)', textAlign: 'center' }}>
+            Finance requisitions · Internal access only
+          </div>
         </div>
+      </div>
 
-        {adminExists ? (
-          <div className="card" style={{ padding: 28, textAlign: 'center' }}>
-            <div style={{ fontSize: 32, marginBottom: 16 }}>🔒</div>
-            <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--ink)', marginBottom: 10 }}>
-              Self-registration is closed
+      {/* Form panel */}
+      <div className="kit-auth__form">
+        <div style={{ width: '100%', maxWidth: 420 }}>
+          <div style={{ marginBottom: 28 }}>
+            <h1 style={{ fontSize: 28, fontWeight: 700, color: 'var(--text-title)', margin: '0 0 8px', fontFamily: 'var(--font-display)' }}>
+              {adminExists ? 'Access restricted' : 'Create your account'}
+            </h1>
+            <p style={{ fontSize: 14, color: 'var(--text-secondary)', margin: 0 }}>
+              {adminExists ? 'Self-registration is closed.' : 'Set up the first administrator account.'}
+            </p>
+          </div>
+
+          {adminExists ? (
+            <div className="fd-card" style={{ padding: 28, textAlign: 'center' }}>
+              <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-title)', marginBottom: 10 }}>
+                Self-registration is closed
+              </div>
+              <div style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: 20 }}>
+                The system is already configured. New accounts must be created by an administrator.
+                Contact your admin to have an account set up for you.
+              </div>
+              <a href="/login" className="fd-btn fd-btn--primary fd-btn--block">
+                Go to sign in
+              </a>
             </div>
-            <div style={{ fontSize: 13, color: 'var(--ink-3)', lineHeight: 1.6, marginBottom: 20 }}>
-              The system is already configured. New accounts must be created by an administrator.
-              Contact your admin to have an account set up for you.
-            </div>
-            <a
-              href="/login"
-              style={{ display: 'inline-block', padding: '10px 24px', borderRadius: 8, background: 'var(--brand)', color: '#fff', textDecoration: 'none', fontSize: 14, fontWeight: 700 }}
-            >
-              Go to Sign In
+          ) : (
+            <SignupForm departments={departments} />
+          )}
+
+          <div style={{ textAlign: 'center', marginTop: 20, fontSize: 13, color: 'var(--text-muted)' }}>
+            Already have an account?{' '}
+            <a href="/login" style={{ color: 'var(--green-700)', textDecoration: 'none', fontWeight: 600 }}>
+              Sign in
             </a>
           </div>
-        ) : (
-          <SignupForm departments={departments} />
-        )}
-
-        <div style={{ textAlign: 'center', marginTop: 20, fontSize: 13, color: 'var(--ink-4)' }}>
-          Already have an account?{' '}
-          <a href="/login" style={{ color: 'var(--brand)', textDecoration: 'none', fontWeight: 600 }}>
-            Sign in
-          </a>
-        </div>
-
-        <div style={{ textAlign: 'center', marginTop: 16, fontSize: 11, color: 'var(--ink-5)' }}>
-          TBC OutOfZion · Internal Finance System
         </div>
       </div>
     </div>

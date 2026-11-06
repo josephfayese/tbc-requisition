@@ -1,6 +1,5 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { fmtDate } from '@/lib/utils'
 import AuditClient from './AuditClient'
 
 export default async function AuditPage() {
@@ -31,14 +30,11 @@ export default async function AuditPage() {
   }))
 
   return (
-    <div className="page" style={{ maxWidth: 1100 }}>
-      <div className="masthead" style={{ marginBottom: 28 }}>
+    <div>
+      <div className="fd-pagehead">
         <div>
-          <div className="masthead-eyebrow"><span className="bar" />Audit & History</div>
-          <h1>Immutable <em>Audit Log</em></h1>
-          <p className="masthead-sub">
-            Select a requisition to see its full timeline. All actions are append-only.
-          </p>
+          <h1 className="fd-pagehead__title">Audit log</h1>
+          <p className="fd-pagehead__sub">Select a requisition to see its full timeline. All actions are append-only.</p>
         </div>
       </div>
       <AuditClient requisitions={requisitions} fullLog={log ?? []} />

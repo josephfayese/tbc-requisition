@@ -1,24 +1,38 @@
 'use client'
 
-import { useState, useTransition } from 'react'
-import { useRouter } from 'next/navigation'
+import { Suspense, useState, useTransition } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { loginWithEmail } from '@/app/actions'
 import { useToast } from '@/components/Toast'
+import Link from 'next/link'
 
 export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginInner />
+    </Suspense>
+  )
+}
+
+function LoginInner() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
   const [isPending, startTransition] = useTransition()
   const { toast } = useToast()
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const notice = searchParams.get('notice')
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!email.trim() || !password) return
+    if (!email.trim() || !password) { setError('Enter your email and password.'); return }
+    setError('')
     startTransition(async () => {
       const result = await loginWithEmail(email.trim(), password)
       if (result.error) {
-        toast(result.error, 'error')
+        setError(result.error)
+        setPassword('')
       } else if (result.mustChangePassword) {
         router.push('/change-password')
       } else {
@@ -29,81 +43,80 @@ export default function LoginPage() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg)', padding: 20 }}>
-      <div style={{ width: '100%', maxWidth: 380 }}>
-        {/* Brand */}
-        <div style={{ textAlign: 'center', marginBottom: 32 }}>
+    <div className="kit-auth">
+      {/* Left panel — forest with scripture */}
+      <div className="kit-auth__panel">
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo-wordmark.jpg" alt="Out of Zion — The Baptizing Church" style={{ width: 220, maxWidth: '80%', margin: '0 auto 16px', display: 'block' }} />
-          <div style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.12em', color: 'var(--ink-4)', marginBottom: 6 }}>
-            TBC OutOfZion
-          </div>
-          <h1 style={{ fontSize: 24, fontWeight: 800, color: 'var(--ink)', margin: 0, letterSpacing: '-0.02em' }}>
-            Finance Requisitions
-          </h1>
-          <p style={{ fontSize: 13, color: 'var(--ink-3)', marginTop: 8 }}>
-            Sign in to your account to continue
-          </p>
+          <img src="/logo-mark.jpg" alt="" style={{ width: 36, height: 36, borderRadius: '50%', background: '#fff' }} />
+          <span style={{ font: '700 19px/1.2 var(--font-display)' }}>TBC OutOfZion · Finance</span>
         </div>
+        <div className="kit-auth__quote" style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+          <blockquote style={{ margin: 0, font: '600 30px/1.35 var(--font-display)', maxWidth: 560, textWrap: 'pretty' }}>
+            &ldquo;Moreover it is required in stewards, that a man be found faithful.&rdquo;
+          </blockquote>
+          <div style={{ marginTop: 20, fontSize: 13, color: 'var(--cream-on-forest-muted)' }}>1 Corinthians 4:2</div>
+        </div>
+      </div>
 
-        {/* Form card */}
-        <div className="card" style={{ padding: 28 }}>
-          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <div>
-              <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--ink-3)', marginBottom: 6 }}>
-                Email address
-              </label>
+      {/* Right panel — form */}
+      <div className="kit-auth__form">
+        <div className="kit-auth__inner">
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 18 }} noValidate>
+            <div style={{ marginBottom: 4 }}>
+              <h1 style={{ margin: 0, font: '700 32px/38px var(--font-display)', letterSpacing: '-0.01em' }}>Welcome back</h1>
+              <p style={{ margin: '4px 0 0', fontSize: 14, color: 'var(--text-muted)' }}>
+                Sign in with the details sent by your administrator.
+              </p>
+            </div>
+
+            {notice === 'idle' && (
+              <div className="fd-notice fd-notice--neutral">
+                <svg className="fd-notice__icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                <div className="fd-notice__body">
+                  <div className="fd-notice__text">You were signed out due to inactivity.</div>
+                </div>
+              </div>
+            )}
+
+            <div className="fd-field">
+              <label className="fd-field__label">Email</label>
               <input
-                className="li-input"
+                className="fd-input"
                 type="email"
-                placeholder="you@tbcoutotzion.org"
+                placeholder="name@tbcooz-finance.com"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
+                onChange={(e) => { setEmail(e.target.value); setError('') }}
                 autoComplete="email"
                 autoFocus
               />
             </div>
-            <div>
-              <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--ink-3)', marginBottom: 6 }}>
-                Password
-              </label>
+
+            <div className="fd-field">
+              <label className="fd-field__label">Password</label>
               <input
-                className="li-input"
+                className="fd-input"
                 type="password"
                 placeholder="••••••••"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
+                onChange={(e) => { setPassword(e.target.value); setError('') }}
                 autoComplete="current-password"
+                aria-invalid={error ? 'true' : undefined}
               />
+              {error && <span className="fd-field__error">{error}</span>}
             </div>
-            <button
-              type="submit"
-              className="pri-btn"
-              style={{ width: '100%', justifyContent: 'center', marginTop: 4 }}
-              disabled={isPending || !email.trim() || !password}
-            >
-              {isPending ? 'Signing in…' : 'Sign in'}
+
+            <button type="submit" className="fd-btn fd-btn--primary fd-btn--block" disabled={isPending}>
+              {isPending ? 'Signing in...' : 'Sign in'}
             </button>
+
+            <div style={{ textAlign: 'center', fontSize: 14, color: 'var(--text-muted)' }}>
+              No account? Ask your administrator to invite you.
+            </div>
+            <div style={{ textAlign: 'center', fontSize: 14 }}>
+              <Link href="/dashboard/viewer">Open the group viewer</Link>
+            </div>
           </form>
-        </div>
-
-        <div style={{ textAlign: 'center', marginTop: 20, fontSize: 13, color: 'var(--ink-4)' }}>
-          Don&apos;t have an account?{' '}
-          <a href="/signup" style={{ color: 'var(--brand)', textDecoration: 'none', fontWeight: 600 }}>
-            Create one
-          </a>
-        </div>
-
-        <div style={{ textAlign: 'center', marginTop: 12, fontSize: 12, color: 'var(--ink-4)' }}>
-          <a href="/dashboard/viewer" style={{ color: 'var(--ink-4)', textDecoration: 'none' }}>
-            View group dashboard (passcode only) →
-          </a>
-        </div>
-
-        <div style={{ textAlign: 'center', marginTop: 20, fontSize: 11, color: 'var(--ink-5)' }}>
-          TBC OutOfZion · Internal Finance System
         </div>
       </div>
     </div>

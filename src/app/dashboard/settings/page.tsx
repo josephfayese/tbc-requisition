@@ -1,6 +1,9 @@
+import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import SettingsClient from './SettingsClient'
+
+export const metadata: Metadata = { title: 'Settings' }
 
 export default async function SettingsPage() {
   const supabase = await createClient()
@@ -35,12 +38,11 @@ export default async function SettingsPage() {
   }
 
   return (
-    <div className="page" style={{ maxWidth: 720 }}>
-      <div className="masthead" style={{ marginBottom: 28 }}>
+    <div>
+      <div className="fd-pagehead">
         <div>
-          <div className="masthead-eyebrow"><span className="bar" />Settings</div>
-          <h1>App <em>Settings</em></h1>
-          <p className="masthead-sub">Control module access and group dashboard visibility.</p>
+          <h1 className="fd-pagehead__title">Settings</h1>
+          <p className="fd-pagehead__sub">Control module access and group dashboard visibility.</p>
         </div>
       </div>
       <SettingsClient

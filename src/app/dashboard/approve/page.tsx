@@ -1,7 +1,10 @@
+import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import ApproveClient from './ApproveClient'
 import { formatNaira } from '@/lib/utils'
+
+export const metadata: Metadata = { title: 'Requisition Queue' }
 
 export default async function ApprovePage() {
   const supabase = await createClient()
@@ -49,14 +52,13 @@ export default async function ApprovePage() {
   const totalValue = items.reduce((s: number, i: any) => s + i.amount, 0)
 
   return (
-    <div className="page" style={{ maxWidth: 960 }}>
-      <div className="masthead" style={{ marginBottom: 24 }}>
+    <div>
+      <div className="fd-pagehead" style={{ marginBottom: 24 }}>
         <div>
-          <div className="masthead-eyebrow"><span className="bar" />Deliberation</div>
-          <h1>All <em>Requisitions</em></h1>
-          <p className="masthead-sub">
+          <h1 className="fd-pagehead__title">All requisitions</h1>
+          <p className="fd-pagehead__sub">
             {items.length} item{items.length !== 1 ? 's' : ''} pending · {formatNaira(totalValue)} total
-            {!canApprove && <span style={{ marginLeft: 10, fontSize: 11, color: 'var(--ink-4)' }}>— View only</span>}
+            {!canApprove && <span style={{ marginLeft: 10, fontSize: 11, color: 'var(--text-muted)' }}>— View only</span>}
           </p>
         </div>
       </div>

@@ -1,6 +1,9 @@
+import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import DashboardClient from './DashboardClient'
+
+export const metadata: Metadata = { title: 'Dashboard' }
 
 // Roles that get a full home page vs. a direct redirect.
 // Dashboard is reserved for the finance team, DG, and Admin.

@@ -2,116 +2,117 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { changePassword } from '@/app/actions'
+import { changePassword, logout } from '@/app/actions'
 import { useToast } from '@/components/Toast'
 
+const checks = (pw: string) => [
+  { label: 'At least 8 characters', ok: pw.length >= 8 },
+  { label: 'Contains a letter', ok: /[a-zA-Z]/.test(pw) },
+  { label: 'Contains a number', ok: /\d/.test(pw) },
+]
+
 export default function ChangePasswordPage() {
-  const [newPassword, setNewPassword] = useState('')
-  const [confirm, setConfirm] = useState('')
+  const [pw, setPw] = useState('')
+  const [pw2, setPw2] = useState('')
+  const [error, setError] = useState('')
   const [isPending, startTransition] = useTransition()
   const { toast } = useToast()
   const router = useRouter()
 
-  const canSubmit = newPassword.length >= 8 && newPassword === confirm && !isPending
+  const ch = checks(pw)
+  const allPassed = ch.every(c => c.ok)
+  const canSubmit = allPassed && pw === pw2 && !isPending
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!canSubmit) return
-    if (newPassword !== confirm) {
-      toast('Passwords do not match', 'error')
-      return
-    }
+    if (pw !== pw2) { setError('The two passwords do not match.'); return }
+    setError('')
     startTransition(async () => {
-      const result = await changePassword(newPassword)
-      if (result.error) {
-        toast(result.error, 'error')
-      } else {
-        toast('Password updated — welcome!', 'success')
-        router.push('/dashboard')
-        router.refresh()
-      }
+      const result = await changePassword(pw)
+      if (result.error) { setError(result.error) }
+      else { toast('Password updated — welcome!', 'success'); router.push('/dashboard'); router.refresh() }
     })
   }
 
-  return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg)', padding: 20 }}>
-      <div style={{ width: '100%', maxWidth: 380 }}>
-        {/* Brand */}
-        <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo-wordmark.jpg" alt="Out of Zion — The Baptizing Church" style={{ width: 220, maxWidth: '80%', margin: '0 auto 16px', display: 'block' }} />
-          <div style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.12em', color: 'var(--ink-4)', marginBottom: 6 }}>
-            TBC OutOfZion
-          </div>
-          <h1 style={{ fontSize: 24, fontWeight: 800, color: 'var(--ink)', margin: 0, letterSpacing: '-0.02em' }}>
-            Set your password
-          </h1>
-          <p style={{ fontSize: 13, color: 'var(--ink-3)', marginTop: 8, lineHeight: 1.5 }}>
-            This is your first login. Choose a personal password to secure your account.
-          </p>
-        </div>
+  async function handleSignOut() {
+    await logout()
+    router.push('/login')
+  }
 
-        <div className="card" style={{ padding: 28 }}>
-          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <div>
-              <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--ink-3)', marginBottom: 6 }}>
-                New password
-              </label>
+  return (
+    <div className="kit-auth">
+      {/* Left panel — forest (no quote) */}
+      <div className="kit-auth__panel">
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo-mark.jpg" alt="" style={{ width: 36, height: 36, borderRadius: '50%', background: '#fff' }} />
+          <span style={{ font: '700 19px/1.2 var(--font-display)' }}>TBC OutOfZion · Finance</span>
+        </div>
+        <div style={{ flex: 1 }} />
+      </div>
+
+      {/* Right panel — form */}
+      <div className="kit-auth__form">
+        <div className="kit-auth__inner">
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 18 }} noValidate>
+            <div style={{ marginBottom: 4 }}>
+              <h1 style={{ margin: 0, font: '700 32px/38px var(--font-display)', letterSpacing: '-0.01em' }}>Choose a new password</h1>
+              <p style={{ margin: '4px 0 0', fontSize: 14, color: 'var(--text-muted)' }}>
+                Replace the temporary password from your administrator before you continue.
+              </p>
+            </div>
+
+            <div className="fd-field">
+              <label className="fd-field__label">New password</label>
               <input
-                className="li-input"
+                className="fd-input"
                 type="password"
-                placeholder="At least 8 characters"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                required
+                value={pw}
+                onChange={(e) => { setPw(e.target.value); setError('') }}
                 autoFocus
                 autoComplete="new-password"
               />
-              {newPassword.length > 0 && newPassword.length < 8 && (
-                <div style={{ fontSize: 11, color: 'var(--neg)', marginTop: 5 }}>
-                  Must be at least 8 characters
-                </div>
-              )}
             </div>
 
-            <div>
-              <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--ink-3)', marginBottom: 6 }}>
-                Confirm password
-              </label>
+            {pw.length > 0 && (
+              <ul style={{ listStyle: 'none', margin: '-6px 0 0', padding: 0, display: 'flex', flexDirection: 'column', gap: 6, fontSize: 14 }}>
+                {ch.map(c => (
+                  <li key={c.label} style={{ display: 'flex', alignItems: 'center', gap: 8, color: c.ok ? 'var(--approved-fg)' : 'var(--text-muted)' }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                      <circle cx="12" cy="12" r="10"/>
+                      {c.ok && <polyline points="9 12 11.5 14.5 16 10"/>}
+                    </svg>
+                    {c.label}
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            <div className="fd-field">
+              <label className="fd-field__label">Confirm new password</label>
               <input
-                className="li-input"
+                className="fd-input"
                 type="password"
-                placeholder="Repeat your password"
-                value={confirm}
-                onChange={(e) => setConfirm(e.target.value)}
-                required
+                value={pw2}
+                onChange={(e) => { setPw2(e.target.value); setError('') }}
                 autoComplete="new-password"
+                aria-invalid={error ? 'true' : undefined}
               />
-              {confirm.length > 0 && newPassword !== confirm && (
-                <div style={{ fontSize: 11, color: 'var(--neg)', marginTop: 5 }}>
-                  Passwords do not match
-                </div>
-              )}
-              {confirm.length > 0 && newPassword === confirm && newPassword.length >= 8 && (
-                <div style={{ fontSize: 11, color: 'var(--pos)', marginTop: 5 }}>
-                  ✓ Passwords match
-                </div>
+              {error && <span className="fd-field__error">{error}</span>}
+              {!error && pw2.length > 0 && pw !== pw2 && (
+                <span className="fd-field__error">The two passwords do not match.</span>
               )}
             </div>
 
-            <button
-              type="submit"
-              className="pri-btn"
-              style={{ width: '100%', justifyContent: 'center', marginTop: 4, opacity: canSubmit ? 1 : 0.5 }}
-              disabled={!canSubmit}
-            >
-              {isPending ? 'Saving…' : 'Set password & continue'}
+            <button type="submit" className="fd-btn fd-btn--primary fd-btn--block" disabled={!canSubmit}>
+              {isPending ? 'Saving...' : 'Save password'}
             </button>
-          </form>
-        </div>
 
-        <div style={{ textAlign: 'center', marginTop: 20, fontSize: 11, color: 'var(--ink-5)' }}>
-          TBC OutOfZion · Internal Finance System
+            <div style={{ textAlign: 'center' }}>
+              <button type="button" className="fd-btn fd-btn--ghost fd-btn--sm" onClick={handleSignOut}>Sign out</button>
+            </div>
+          </form>
         </div>
       </div>
     </div>

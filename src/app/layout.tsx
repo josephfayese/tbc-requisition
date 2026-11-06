@@ -3,7 +3,7 @@ import "./globals.css";
 import { ToastProvider } from "@/components/Toast";
 
 export const metadata: Metadata = {
-  title: "TBC OutOfZion · Finance Requisitions",
+  title: { default: "TBC OutOfZion · Finance Requisitions", template: "%s · TBC Finance" },
   description: "Church finance requisition workflow for TBC OutOfZion",
   appleWebApp: {
     capable: true,
@@ -16,7 +16,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#064E2F",
+  themeColor: "#0D2F1B",
   width: "device-width",
   initialScale: 1,
 };
@@ -27,8 +27,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="h-full">
-      <body className="min-h-full" style={{ background: 'var(--bg)', color: 'var(--ink)' }}>
+    <html lang="en">
+      <body>
         <ToastProvider>
           {children}
         </ToastProvider>

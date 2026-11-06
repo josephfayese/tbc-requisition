@@ -37,11 +37,11 @@ export default function MyReqActions({ item }: Props) {
   if (!editing) {
     return (
       <button
-        className="act-btn"
-        style={{ background: 'var(--brand-soft)', color: 'var(--brand)', fontSize: 11 }}
+        className="fd-btn fd-btn--ghost"
+        style={{ fontSize: 11 }}
         onClick={() => setEditing(true)}
       >
-        ✏ Edit &amp; resubmit
+        Edit and resubmit
       </button>
     )
   }
@@ -49,14 +49,14 @@ export default function MyReqActions({ item }: Props) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
       <input
-        className="li-input"
+        className="fd-input"
         value={desc}
         onChange={(e) => setDesc(e.target.value)}
         placeholder="Description"
         style={{ fontSize: 12, padding: '6px 8px' }}
       />
       <input
-        className="li-input"
+        className="fd-input"
         type="number"
         value={amount}
         onChange={(e) => setAmount(e.target.value)}
@@ -66,25 +66,25 @@ export default function MyReqActions({ item }: Props) {
         style={{ fontSize: 12, padding: '6px 8px', textAlign: 'right' }}
       />
       <textarea
-        className="li-input"
+        className="fd-input"
         value={note}
         onChange={(e) => setNote(e.target.value)}
-        placeholder="Explain what changed (optional but recommended)…"
+        placeholder="Explain what changed (optional but recommended)..."
         rows={2}
         style={{ fontSize: 12, padding: '6px 8px', resize: 'vertical', minHeight: 48 }}
       />
       <div style={{ display: 'flex', gap: 6 }}>
         <button
-          className="act-btn act-approve"
+          className="fd-btn fd-btn--primary"
           onClick={handleResubmit}
           disabled={isPending}
           style={{ fontSize: 11, flex: 1, justifyContent: 'center' }}
         >
-          {isPending ? '…' : 'Resubmit'}
+          {isPending ? '...' : 'Resubmit'}
         </button>
         <button
-          className="act-btn"
-          style={{ background: 'var(--bg-sunken)', color: 'var(--ink-3)', fontSize: 11 }}
+          className="fd-btn fd-btn--ghost"
+          style={{ fontSize: 11 }}
           onClick={() => { setEditing(false); setDesc(item.description); setAmount(String(item.amount)); setNote('') }}
         >
           Cancel

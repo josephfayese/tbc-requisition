@@ -31,12 +31,12 @@ export default function PayButton({ lineItemId, description, amount }: Props) {
 
   return (
     <button
-      className="act-btn act-pay"
+      className="fd-btn fd-btn--primary fd-btn--sm"
       onClick={handlePay}
       disabled={isPending}
       style={{ fontSize: 11 }}
     >
-      {isPending ? '…' : '💳 Mark paid'}
+      {isPending ? '...' : 'Mark paid'}
     </button>
   )
 }

@@ -9,49 +9,44 @@ const transitions = [
 
 export default function StatesPage() {
   return (
-    <div className="page" style={{ maxWidth: 860 }}>
-      <div className="masthead" style={{ marginBottom: 28 }}>
+    <div>
+      <div className="fd-pagehead">
         <div>
-          <div className="masthead-eyebrow"><span className="bar" />Reference</div>
-          <h1>Line Item <em>States</em></h1>
-          <p className="masthead-sub">
+          <h1 className="fd-pagehead__title">Line item states</h1>
+          <p className="fd-pagehead__sub">
             Each line item moves through states independently. A requisition can have items in multiple states simultaneously.
           </p>
         </div>
       </div>
 
       {/* State diagram */}
-      <div className="card" style={{ padding: 28, marginBottom: 24 }}>
-        <div className="card-title" style={{ marginBottom: 20 }}>State Machine Diagram</div>
+      <div className="fd-card" style={{ padding: 28, marginBottom: 24 }}>
+        <div className="fd-card__title" style={{ marginBottom: 20 }}>State machine diagram</div>
         <LineItemStatesFlow />
       </div>
 
       {/* State descriptions */}
-      <div className="section-title" style={{ marginTop: 0 }}>
-        <span className="bar" />States
-      </div>
+      <h2 style={{ fontSize: 13, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-muted)', marginBottom: 12 }}>States</h2>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 28 }}>
         {[
-          { status: 'pending', color: 'var(--warn)', bg: 'var(--warn-soft)', desc: 'Newly submitted. Awaiting review by the DG or Backup approver.' },
-          { status: 'approved', color: 'var(--info)', bg: 'var(--info-soft)', desc: 'Approved by DG / Backup. Ready for Chima to execute payment.' },
-          { status: 'rejected', color: 'var(--neg)', bg: 'var(--neg-soft)', desc: 'Declined with a mandatory reason. The HoD can edit and resubmit.' },
-          { status: 'paid', color: 'var(--pos)', bg: 'var(--pos-soft)', desc: 'Payment executed by Chima. Terminal state — no further changes.' },
+          { status: 'pending', color: 'var(--pending-fg)', bg: 'var(--pending-bg)', desc: 'Newly submitted. Awaiting review by the DG or Backup approver.' },
+          { status: 'approved', color: 'var(--approved-fg)', bg: 'var(--approved-bg)', desc: 'Approved by DG / Backup. Ready for payment execution.' },
+          { status: 'rejected', color: 'var(--rejected-fg)', bg: 'var(--rejected-bg)', desc: 'Declined with a mandatory reason. The HoD can edit and resubmit.' },
+          { status: 'paid', color: 'var(--paid-fg)', bg: 'var(--paid-bg)', desc: 'Payment executed. Terminal state — no further changes.' },
         ].map((s) => (
-          <div key={s.status} className="card" style={{ padding: '14px 16px', borderTop: `3px solid ${s.color}` }}>
-            <span className="pill" style={{ background: s.bg, color: s.color, textTransform: 'uppercase', fontWeight: 800, letterSpacing: '0.05em', marginBottom: 10, display: 'inline-flex' }}>
-              {s.status}
+          <div key={s.status} className="fd-card" style={{ padding: '14px 16px', borderTop: `3px solid ${s.color}` }}>
+            <span className={`fd-badge fd-badge--${s.status}`} style={{ marginBottom: 10, display: 'inline-flex' }}>
+              <span className="fd-badge__dot" />{s.status}
             </span>
-            <p style={{ fontSize: 12, color: 'var(--ink-3)', margin: 0, lineHeight: 1.5 }}>{s.desc}</p>
+            <p style={{ fontSize: 12, color: 'var(--text-secondary)', margin: 0, lineHeight: 1.5 }}>{s.desc}</p>
           </div>
         ))}
       </div>
 
       {/* Transitions table */}
-      <div className="section-title">
-        <span className="bar" />Valid Transitions
-      </div>
-      <div className="table-wrap">
-        <table className="tbl">
+      <h2 style={{ fontSize: 13, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-muted)', marginBottom: 12 }}>Valid transitions</h2>
+      <div className="fd-table-wrap">
+        <table className="fd-table">
           <thead>
             <tr>
               <th>From</th>
@@ -64,11 +59,11 @@ export default function StatesPage() {
           <tbody>
             {transitions.map((t, i) => (
               <tr key={i}>
-                <td><span className={`pill ${statusClass(t.from)}`}>{t.from}</span></td>
-                <td><span className={`pill ${statusClass(t.to)}`}>{t.to}</span></td>
+                <td><span className={`fd-badge fd-badge--${t.from}`}><span className="fd-badge__dot" />{t.from}</span></td>
+                <td><span className={`fd-badge fd-badge--${t.to}`}><span className="fd-badge__dot" />{t.to}</span></td>
                 <td style={{ fontWeight: 500 }}>{t.actor}</td>
-                <td style={{ color: 'var(--ink-3)', fontSize: 12 }}>{t.condition}</td>
-                <td><code style={{ fontSize: 11, background: 'var(--bg-sunken)', padding: '2px 6px', borderRadius: 4, color: 'var(--ink-3)' }}>{t.trigger}</code></td>
+                <td className="fd-muted" style={{ fontSize: 12 }}>{t.condition}</td>
+                <td><code style={{ fontSize: 11, background: 'var(--surface-canvas)', padding: '2px 6px', borderRadius: 4, color: 'var(--text-secondary)' }}>{t.trigger}</code></td>
               </tr>
             ))}
           </tbody>
@@ -76,9 +71,9 @@ export default function StatesPage() {
       </div>
 
       {/* Important notes */}
-      <div className="card" style={{ padding: 20, marginTop: 20, background: 'var(--info-soft)', border: '1px solid var(--info)' }}>
-        <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--info)', marginBottom: 8 }}>Important notes</div>
-        <ul style={{ margin: 0, padding: '0 0 0 16px', fontSize: 13, color: 'var(--ink-2)', lineHeight: 1.7 }}>
+      <div className="fd-notice fd-notice--info" style={{ marginTop: 20 }}>
+        <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 8 }}>Important notes</div>
+        <ul style={{ margin: 0, padding: '0 0 0 16px', fontSize: 13, color: 'var(--text-body)', lineHeight: 1.7 }}>
           <li>Items move independently — a single requisition can have some approved, some rejected, and some pending simultaneously.</li>
           <li>Resubmitted items re-enter the approval queue as fresh <strong>pending</strong> items, preserving the original rejection in the audit log.</li>
           <li>The <strong>paid</strong> state is terminal — no further transitions are possible.</li>
@@ -87,9 +82,4 @@ export default function StatesPage() {
       </div>
     </div>
   )
-}
-
-function statusClass(status: string): string {
-  const m: Record<string, string> = { pending: 'warn', approved: 'info', rejected: 'neg', paid: 'pos' }
-  return m[status] ?? 'neutral'
 }

@@ -1,5 +1,8 @@
+import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
 import { formatNaira, fmtDate } from '@/lib/utils'
+
+export const metadata: Metadata = { title: 'My Requisitions' }
 import StatusPill from '@/components/StatusPill'
 import MyReqActions from './MyReqActions'
 import CsvExport from './CsvExport'
@@ -20,15 +23,14 @@ export default async function MyReqPage() {
   const all = reqs ?? []
 
   return (
-    <div className="page" style={{ maxWidth: 860 }}>
-      <div className="masthead" style={{ marginBottom: 28 }}>
+    <div>
+      <div className="fd-pagehead" style={{ marginBottom: 28 }}>
         <div>
-          <div className="masthead-eyebrow"><span className="bar" />My Requisitions</div>
-          <h1>Your <em>Submissions</em></h1>
-          <p className="masthead-sub">{all.length} requisition{all.length !== 1 ? 's' : ''} submitted. Rejected items can be edited and resubmitted.</p>
+          <h1 className="fd-pagehead__title">Your submissions</h1>
+          <p className="fd-pagehead__sub">{all.length} requisition{all.length !== 1 ? 's' : ''} submitted. Rejected items can be edited and resubmitted.</p>
         </div>
         {all.length > 0 && (
-          <div className="masthead-actions">
+          <div className="fd-pagehead__actions">
             <CsvExport rows={all.flatMap((req) =>
               (req.line_items ?? []).map((item: { description: string; amount: number; status: string }) => ({
                 req_number: req.req_number,
@@ -44,11 +46,10 @@ export default async function MyReqPage() {
       </div>
 
       {all.length === 0 && (
-        <div className="card" style={{ padding: 48, textAlign: 'center' }}>
-          <div style={{ fontSize: 32, marginBottom: 12 }}>📄</div>
-          <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--ink)' }}>No requisitions yet</div>
-          <div style={{ fontSize: 13, color: 'var(--ink-3)', marginTop: 6 }}>
-            <a href="/dashboard/new-req" style={{ color: 'var(--brand)', textDecoration: 'none', fontWeight: 600 }}>Submit your first requisition →</a>
+        <div className="fd-empty">
+          <div className="fd-empty__title">No requisitions yet</div>
+          <div style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 6 }}>
+            <a href="/dashboard/new-req" style={{ color: 'var(--green-700)', textDecoration: 'none', fontWeight: 600 }}>Submit your first requisition</a>
           </div>
         </div>
       )}
@@ -69,21 +70,21 @@ export default async function MyReqPage() {
           else if (statuses.every((s: string) => s === 'dg_approved' || s === 'approved' || s === 'paid')) overallStatus = 'dg_approved'
 
           return (
-            <div key={req.id} className="card" style={{ overflow: 'hidden' }}>
+            <div key={req.id} className="fd-card" style={{ overflow: 'hidden' }}>
               {/* Req header */}
-              <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--line)', display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
+              <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--border-divider)', display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
                 <div>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--ink)', fontFamily: 'var(--mono)' }}>{req.req_number}</div>
-                  <div style={{ fontSize: 11, color: 'var(--ink-4)', marginTop: 2 }}>{req.dept} · {fmtDate(req.created_at)}</div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-body)', fontFamily: 'var(--mono)' }}>{req.req_number}</div>
+                  <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{req.dept} · {fmtDate(req.created_at)}</div>
                 </div>
                 <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--ink)', fontVariantNumeric: 'tabular-nums' }}>{formatNaira(total)}</span>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-body)', fontVariantNumeric: 'tabular-nums' }}>{formatNaira(total)}</span>
                   <StatusPill status={overallStatus} />
                 </div>
               </div>
 
               {/* Line items */}
-              <table className="tbl">
+              <table className="fd-table">
                 <thead>
                   <tr>
                     <th>Description</th>
@@ -95,13 +96,13 @@ export default async function MyReqPage() {
                 <tbody>
                   {items.map((item: { id: number; description: string; amount: number; status: string; reason: string | null }) => (
                     <tr key={item.id}>
-                      <td className="strong">
+                      <td style={{ fontWeight: 600 }}>
                         {item.description}
                         {item.reason && (
-                          <span className="sub" style={{ color: 'var(--neg)' }}>Reason: {item.reason}</span>
+                          <span className="sub" style={{ color: 'var(--rejected-fg)' }}>Reason: {item.reason}</span>
                         )}
                       </td>
-                      <td className="num">{formatNaira(item.amount)}</td>
+                      <td className="fd-num">{formatNaira(item.amount)}</td>
                       <td><StatusPill status={item.status as 'pending' | 'approved' | 'rejected' | 'paid'} /></td>
                       <td>
                         {item.status === 'rejected' && (

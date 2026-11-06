@@ -1,5 +1,8 @@
+import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
 import { formatNaira, fmtDateTime } from '@/lib/utils'
+
+export const metadata: Metadata = { title: 'Payment Queue' }
 import StatusPill from '@/components/StatusPill'
 import PayButton from './PayButton'
 
@@ -40,35 +43,34 @@ export default async function PaymentsPage() {
   const totalPending = approved.reduce((s, i) => s + Number(i.amount), 0)
 
   return (
-    <div className="page" style={{ maxWidth: 900 }}>
-      <div className="masthead" style={{ marginBottom: 28 }}>
+    <div>
+      <div className="fd-pagehead" style={{ marginBottom: 28 }}>
         <div>
-          <div className="masthead-eyebrow"><span className="bar" />Payment Queue</div>
-          <h1><em>Approved</em> Items</h1>
-          <p className="masthead-sub">
+          <h1 className="fd-pagehead__title">Approved items</h1>
+          <p className="fd-pagehead__sub">
             {approved.length} item{approved.length !== 1 ? 's' : ''} approved and awaiting payment ·{' '}
             <strong>{formatNaira(totalPending)}</strong> total outstanding
           </p>
         </div>
         {!canPay && (
-          <div style={{ background: 'var(--warn-soft)', border: '1px solid var(--warn)', borderRadius: 8, padding: '10px 14px', fontSize: 13, color: 'var(--warn)', maxWidth: 280 }}>
+          <div style={{ background: 'var(--pending-bg)', border: '1px solid var(--pending-fg)', borderRadius: 8, padding: '10px 14px', fontSize: 13, color: 'var(--pending-fg)', maxWidth: 280 }}>
             Only Chima or Admin can mark items as paid.
           </div>
         )}
       </div>
 
       {/* Payment queue */}
-      <div className="table-wrap" style={{ marginBottom: 32 }}>
-        <div className="table-head">
-          <span className="card-title">Awaiting Payment</span>
-          <span style={{ fontSize: 12, color: 'var(--ink-4)' }}>{approved.length} items · {formatNaira(totalPending)}</span>
+      <div className="fd-card fd-card--flush" style={{ marginBottom: 32 }}>
+        <div className="fd-card__head">
+          <span className="fd-card__title">Awaiting payment</span>
+          <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{approved.length} items · {formatNaira(totalPending)}</span>
         </div>
         {approved.length === 0 ? (
-          <div style={{ padding: 32, textAlign: 'center', color: 'var(--ink-4)', fontSize: 13 }}>
+          <div className="fd-empty">
             No approved items awaiting payment.
           </div>
         ) : (
-          <table className="tbl">
+          <table className="fd-table">
             <thead>
               <tr>
                 <th>Req #</th>
@@ -88,20 +90,20 @@ export default async function PaymentsPage() {
                 return (
                   <tr key={item.id}>
                     <td style={{ fontFamily: 'var(--mono)', fontSize: 12 }}>{req?.req_number}</td>
-                    <td className="strong">{item.description}</td>
+                    <td style={{ fontWeight: 600 }}>{item.description}</td>
                     <td>{req?.dept}</td>
                     <td>{req?.profiles?.name}</td>
                     <td>
                       {req?.account_number ? (
                         <div style={{ fontSize: 12, lineHeight: 1.4 }}>
                           <div style={{ fontWeight: 600 }}>{req.account_name}</div>
-                          <div style={{ fontFamily: 'var(--mono)', color: 'var(--ink-3)' }}>{req.account_number}</div>
-                          <div style={{ color: 'var(--ink-4)' }}>{req.bank_name}</div>
+                          <div style={{ fontFamily: 'var(--mono)', color: 'var(--text-muted)' }}>{req.account_number}</div>
+                          <div style={{ color: 'var(--text-muted)' }}>{req.bank_name}</div>
                         </div>
                       ) : '—'}
                     </td>
                     <td>{approver?.name ?? '—'}</td>
-                    <td className="num strong">{formatNaira(item.amount)}</td>
+                    <td className="fd-num" style={{ fontWeight: 600 }}>{formatNaira(item.amount)}</td>
                     {canPay && (
                       <td>
                         <PayButton lineItemId={item.id} description={item.description} amount={Number(item.amount)} />
@@ -116,18 +118,17 @@ export default async function PaymentsPage() {
       </div>
 
       {/* Recently paid */}
-      <div className="section-title">
-        <span className="bar" />
-        Recently Paid
-        <span className="count">{paid.length}</span>
-      </div>
-      <div className="table-wrap">
+      <h2 style={{ fontSize: 13, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-muted)', marginBottom: 12 }}>
+        Recently paid
+        <span style={{ marginLeft: 8, fontSize: 11, background: 'var(--surface-canvas)', color: 'var(--text-muted)', padding: '2px 8px', borderRadius: 999, fontWeight: 700 }}>{paid.length}</span>
+      </h2>
+      <div className="fd-card fd-card--flush">
         {paid.length === 0 ? (
-          <div style={{ padding: 32, textAlign: 'center', color: 'var(--ink-4)', fontSize: 13 }}>
+          <div className="fd-empty">
             No payments recorded yet.
           </div>
         ) : (
-          <table className="tbl">
+          <table className="fd-table">
             <thead>
               <tr>
                 <th>Req #</th>
@@ -146,11 +147,11 @@ export default async function PaymentsPage() {
                 return (
                   <tr key={item.id}>
                     <td style={{ fontFamily: 'var(--mono)', fontSize: 12 }}>{req?.req_number}</td>
-                    <td className="strong">{item.description}</td>
+                    <td style={{ fontWeight: 600 }}>{item.description}</td>
                     <td>{req?.dept}</td>
                     <td>{payer?.name ?? '—'}</td>
-                    <td style={{ fontSize: 12, color: 'var(--ink-3)' }}>{item.paid_at ? fmtDateTime(item.paid_at as string) : '—'}</td>
-                    <td className="num">{formatNaira(item.amount)}</td>
+                    <td style={{ fontSize: 12, color: 'var(--text-muted)' }}>{item.paid_at ? fmtDateTime(item.paid_at as string) : '—'}</td>
+                    <td className="fd-num">{formatNaira(item.amount)}</td>
                     <td><StatusPill status="paid" /></td>
                   </tr>
                 )
