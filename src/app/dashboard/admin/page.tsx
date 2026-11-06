@@ -67,9 +67,8 @@ export default async function AdminPage() {
               {users.map((u) => (
                 <UserRow
                   key={u.id}
-                  user={u}
+                  user={{ ...u, joined: fmtDate(u.created_at) }}
                   departments={(depts ?? []).map((d) => d.name)}
-                  fmtDate={fmtDate}
                   currentUserId={user!.id}
                 />
               ))}

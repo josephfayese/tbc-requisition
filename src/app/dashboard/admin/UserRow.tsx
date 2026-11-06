@@ -21,18 +21,16 @@ interface User {
   email: string
   role: string
   dept: string | null
-  created_at: string
+  joined: string
 }
 
 export default function UserRow({
   user,
   departments,
-  fmtDate,
   currentUserId,
 }: {
   user: User
   departments: string[]
-  fmtDate: (d: string) => string
   currentUserId: string
 }) {
   const [editing, setEditing] = useState(false)
@@ -123,7 +121,7 @@ export default function UserRow({
             user.dept ?? '—'
           )}
         </td>
-        <td className="fd-muted" style={{ fontSize: 12 }}>{fmtDate(user.created_at)}</td>
+        <td className="fd-muted" style={{ fontSize: 12 }}>{user.joined}</td>
         <td style={{ whiteSpace: 'nowrap' }}>
           {editing ? (
             <div style={{ display: 'flex', gap: 6 }}>
